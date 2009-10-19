@@ -12,6 +12,11 @@
 #define PORTAL	'^'
 #define VOID	' '
 
+#define LEAD_COLOR		1
+#define BLOCK_COLOR		2
+#define FOOD_COLOR		3
+#define PORTAL_COLOR	4
+
 #define HEAD	snake [0]
 #define TAIL	snake [len]
 
@@ -64,9 +69,21 @@ block portal;
 
 int cause_of_death = DEATH_UNKNOWN;
 
+int use_color = 0;
+
 
 static void finish (int sig);
 
+
+void do_color (int c, int on) {
+	if (use_color) {
+		if (on) {
+			attron (COLOR_PAIR (c));
+		} else {
+			attroff (COLOR_PAIR (c));
+		}
+	}
+}
 
 int collideWithSnake (int x, int y) {
 	int i;
@@ -85,7 +102,10 @@ void placeFood () {
 		if (0 == collideWithSnake (food.x, food.y) && food.x != portal.x && portal.y != food.y)
 			done = 1;
 	}
+	do_color (FOOD_COLOR, 1);
 	mvaddch (food.y, food.x, FOOD);
+	do_color (FOOD_COLOR, 0);
+
 	done = 0;
 	while (!done) {
 		portal.x = rand () % COLS;
@@ -93,7 +113,9 @@ void placeFood () {
 		if (0 == collideWithSnake (portal.x, portal.y) && food.x != portal.x && food.y != portal.y)
 			done = 1;
 	}
+	do_color (PORTAL_COLOR, 1);
 	mvaddch (portal.y, portal.x, PORTAL);
+	do_color (PORTAL_COLOR, 0);
 }
 
 block* fetchSnake () {
@@ -116,7 +138,9 @@ int extendSnake () {
 
 int moveSnake () {
 	int i;
+
 	mvaddch (TAIL.y, TAIL.x, VOID);
+
 	for (i = len; i >= 1; --i) {
 		snake [i].x = snake [i - 1].x;
 		snake [i].y = snake [i - 1].y;
@@ -160,9 +184,17 @@ int moveSnake () {
 		mvaddch (food.y, food.x, VOID);
 		placeFood ();
 	}
+
+	do_color (LEAD_COLOR, 1);
 	mvaddch (HEAD.y, HEAD.x, LEAD);
-	if (len > 0)
+	do_color (LEAD_COLOR, 0);
+
+	if (len > 0) {
+		do_color (BLOCK_COLOR, 1);
 		mvaddch (snake [1].y, snake [1].x, BLOCK);
+		do_color (BLOCK_COLOR, 0);
+	}
+
 	return 0;
 }
 
@@ -218,6 +250,15 @@ int main () {
 	nodelay (stdscr, TRUE);
 	curs_set (0);
 	noecho ();
+
+	if (has_colors ()) {
+		use_color = 1;
+		start_color();
+		init_pair(LEAD_COLOR, COLOR_BLUE, COLOR_BLACK);
+		init_pair(BLOCK_COLOR, COLOR_CYAN, COLOR_BLACK);
+		init_pair(FOOD_COLOR, COLOR_GREEN, COLOR_BLACK);
+		init_pair(PORTAL_COLOR, COLOR_RED, COLOR_BLACK);
+	}
 
 	mvaddstr (0, 0, "move: arrow keys");
 	mvaddstr (1, 0, "stop: q or die");
