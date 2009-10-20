@@ -258,10 +258,10 @@ int main () {
 	if (has_colors ()) {
 		use_color = 1;
 		start_color();
-		init_pair(LEAD_COLOR, COLOR_BLUE, COLOR_BLACK);
-		init_pair(BLOCK_COLOR, COLOR_CYAN, COLOR_BLACK);
-		init_pair(FOOD_COLOR, COLOR_GREEN, COLOR_BLACK);
-		init_pair(PORTAL_COLOR, COLOR_RED, COLOR_BLACK);
+		init_pair(LEAD_COLOR, COLOR_BLUE, COLOR_BLUE);
+		init_pair(BLOCK_COLOR, COLOR_CYAN, COLOR_CYAN);
+		init_pair(FOOD_COLOR, COLOR_GREEN, COLOR_GREEN);
+		init_pair(PORTAL_COLOR, COLOR_RED, COLOR_RED);
 	}
 
 	mvaddstr (0, 0, "move: arrow keys");
