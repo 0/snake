@@ -27,7 +27,11 @@
 #define WEST		4
 #define DIR_RAND 	(rand () % 4 + 1)
 
-#define KEY_QUIT	'q'
+#define KEY_UP_ALT		'w'
+#define KEY_RIGHT_ALT	'd'
+#define KEY_DOWN_ALT	's'
+#define KEY_LEFT_ALT	'a'
+#define KEY_QUIT		'q'
 
 #define START_LEN	0
 #define GROWTH_MIN	10
@@ -287,24 +291,28 @@ int main () {
 		int c = getch ();
 		switch (c) {
 			case KEY_UP:
+			case KEY_UP_ALT:
 				if (dir == SOUTH)
 					snake = reverseSnake ();
 				dir = NORTH;
 				speedUp ();
 				break;
 			case KEY_RIGHT:
+			case KEY_RIGHT_ALT:
 				if (dir == WEST)
 					snake = reverseSnake ();
 				dir = EAST;
 				speedUp ();
 				break;
 			case KEY_DOWN:
+			case KEY_DOWN_ALT:
 				if (dir == NORTH)
 					snake = reverseSnake ();
 				dir = SOUTH;
 				speedUp ();
 				break;
 			case KEY_LEFT:
+			case KEY_LEFT_ALT:
 				if (dir == EAST)
 					snake = reverseSnake ();
 				dir = WEST;
