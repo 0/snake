@@ -365,7 +365,7 @@ static void finish (int sig) {
 	} else {
 		char* cause = stringCOD (cause_of_death);
 		printf ("%s with %d segments in %d seconds on %d lines and %d columns at %d frames per second\n",
-			cause, len, time_total, LINES, COLS, (frame_wait > 0 ? 1000000 / frame_wait : -1));
+			cause, len, time_total, LINES, COLS, (frame_wait > 0 ? 1000000 / frame_wait * 2 / (H_COEF + V_COEF) : -1));
 		free (cause);
 	}
 
