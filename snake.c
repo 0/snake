@@ -61,7 +61,7 @@ typedef struct {
 } block;
 
 
-int time_start;
+time_t time_start;
 int frame_wait;
 
 int dir;
@@ -282,8 +282,6 @@ void show_usage (char *cmd) {
 
 
 int main (int argc, char **argv) {
-	srand (time (NULL));
-
 	static int color_flag = 1;
 	static int bright_flag = 0;
 
@@ -298,6 +296,8 @@ int main (int argc, char **argv) {
 
 	int opterr_flag = 0;
 	int c = 0;
+
+	srand (time (NULL));
 
 	do {
 		c = getopt_long (argc, argv, "h", longopts, NULL);
@@ -358,8 +358,8 @@ int main (int argc, char **argv) {
 
 	while (dir != DEAD) {
 		rev = 0;
-		int c = getch ();
-		switch (c) {
+
+		switch (getch ()) {
 			case KEY_UP:
 			case KEY_UP_ALT:
 				if (dir == SOUTH)
@@ -425,7 +425,7 @@ int main (int argc, char **argv) {
 
 
 static void finish (int sig) {
-	int time_total = time (NULL) - time_start;
+	double time_total = difftime(time (NULL), time_start);
 
 	free (snake);
 	endwin ();
@@ -434,10 +434,10 @@ static void finish (int sig) {
 		printf ("You didn't even play!\n");
 	} else {
 		char* cause = stringCOD (cause_of_death);
-		printf ("%s with %d segments in %d seconds on %d lines and %d columns at %d frames per second\n",
+		printf ("%s with %d segments in %.0f seconds on %d lines and %d columns at %d frames per second\n",
 			cause, len, time_total, LINES, COLS, (frame_wait > 0 ? 1000000 / frame_wait * 2 / (H_COEF + V_COEF) : -1));
 		free (cause);
 	}
 
-	exit (0);
+	exit (sig ? 1 : 0);
 }
