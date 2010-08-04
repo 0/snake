@@ -1,4 +1,5 @@
 #include <curses.h>
+#include <getopt.h>
 #include <signal.h>
 #include <stdlib.h>
 #include <string.h>
@@ -244,7 +245,32 @@ char* stringCOD (int cause) {
 }
 
 
-int main () {
+int main (int argc, char **argv) {
+	static int color_flag = 1;
+
+	struct option longopts [] = {
+		{"color", no_argument, &color_flag, 1},
+		{"no-color", no_argument, &color_flag, 0},
+		{0, 0, 0, 0}
+	};
+
+	int opterr_flag = 0;
+	int c = 0;
+
+	do {
+		c = getopt_long (argc, argv, "", longopts, NULL);
+
+		switch (c) {
+			case '?':
+				opterr_flag = 1;
+				break;
+		}
+	} while (c != -1);
+
+	if (opterr_flag) {
+		exit (1);
+	}
+
 	signal (SIGINT, finish);
 
 	srand (time (NULL));
@@ -255,7 +281,7 @@ int main () {
 	curs_set (0);
 	noecho ();
 
-	if (has_colors ()) {
+	if (color_flag && has_colors ()) {
 		use_color = 1;
 		start_color();
 		init_pair(LEAD_COLOR, COLOR_BLUE, COLOR_BLACK);
