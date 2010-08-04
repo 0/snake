@@ -244,9 +244,30 @@ char* stringCOD (int cause) {
 	return string;
 }
 
+char* generate_header () {
+	switch (rand () % 10) {
+		case 0:
+			return "                 _        \n"
+				" ___ _ __   __ _| | _____ \n"
+				"/ __| '_ \\ / _` | |/ / _ \\\n"
+				"\\__ \\ | | | (_| |   <  __/\n"
+				"|___/_| |_|\\__,_|_|\\_\\___|\n";
+		case 1:
+			return "Yet another snake clone...";
+		case 2:
+			return "Snake's Not A Recursive Acronym";
+		case 3:
+			return "Snake's Not A Knotted Eel";
+		case 4:
+			return "snake!";
+		default:
+			return "snake";
+	}
+}
+
 void show_usage (char *cmd) {
 	printf (
-		"snake\n"
+		"%s\n"
 		"\n"
 		"Usage: %s [options]\n"
 		"\n"
@@ -256,11 +277,13 @@ void show_usage (char *cmd) {
 		"\t--help\n\t\tPrint this.\n"
 		"\n"
 		"Boolean flags --foo have corresponding --no-foo.\n",
-		cmd);
+		generate_header (), cmd);
 }
 
 
 int main (int argc, char **argv) {
+	srand (time (NULL));
+
 	static int color_flag = 1;
 	static int bright_flag = 0;
 
@@ -295,8 +318,6 @@ int main (int argc, char **argv) {
 	}
 
 	signal (SIGINT, finish);
-
-	srand (time (NULL));
 
 	initscr ();
 	keypad (stdscr, TRUE);
