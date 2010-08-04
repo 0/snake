@@ -244,6 +244,21 @@ char* stringCOD (int cause) {
 	return string;
 }
 
+void show_usage (char *cmd) {
+	printf (
+		"snake\n"
+		"\n"
+		"Usage: %s [options]\n"
+		"\n"
+		"Options:\n"
+		"\t--bright\n\t\tEnable brighter object coloring. Default off.\n"
+        "\t--color\n\t\t\Enable color. Default on.\n"
+		"\t--help\n\t\tPrint this.\n"
+		"\n"
+		"Boolean flags --foo have corresponding --no-foo.\n",
+		cmd);
+}
+
 
 int main (int argc, char **argv) {
 	static int color_flag = 1;
@@ -254,6 +269,7 @@ int main (int argc, char **argv) {
 		{"no-bright", no_argument, &bright_flag, 0},
 		{"color", no_argument, &color_flag, 1},
 		{"no-color", no_argument, &color_flag, 0},
+		{"help", no_argument, 0, 'h'},
 		{0, 0, 0, 0}
 	};
 
@@ -261,9 +277,12 @@ int main (int argc, char **argv) {
 	int c = 0;
 
 	do {
-		c = getopt_long (argc, argv, "", longopts, NULL);
+		c = getopt_long (argc, argv, "h", longopts, NULL);
 
 		switch (c) {
+			case 'h':
+				show_usage (argv[0]);
+				exit(0);
 			case '?':
 				opterr_flag = 1;
 				break;
@@ -271,6 +290,7 @@ int main (int argc, char **argv) {
 	} while (c != -1);
 
 	if (opterr_flag) {
+		fprintf (stderr, "Use --help for usage information.\n");
 		exit (1);
 	}
 
