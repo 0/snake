@@ -273,7 +273,7 @@ void show_usage (char *cmd) {
 		"\n"
 		"Options:\n"
 		"\t--bright\n\t\tEnable brighter object coloring. Default off.\n"
-        "\t--color\n\t\t\Enable color. Default on.\n"
+        "\t--color\n\t\tEnable color. Default on.\n"
 		"\t--help\n\t\tPrint this.\n"
 		"\n"
 		"Boolean flags --foo have corresponding --no-foo.\n",
