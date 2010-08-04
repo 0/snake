@@ -247,8 +247,11 @@ char* stringCOD (int cause) {
 
 int main (int argc, char **argv) {
 	static int color_flag = 1;
+	static int bright_flag = 0;
 
 	struct option longopts [] = {
+		{"bright", no_argument, &bright_flag, 1},
+		{"no-bright", no_argument, &bright_flag, 0},
 		{"color", no_argument, &color_flag, 1},
 		{"no-color", no_argument, &color_flag, 0},
 		{0, 0, 0, 0}
@@ -284,10 +287,10 @@ int main (int argc, char **argv) {
 	if (color_flag && has_colors ()) {
 		use_color = 1;
 		start_color();
-		init_pair(LEAD_COLOR, COLOR_BLUE, COLOR_BLACK);
-		init_pair(BLOCK_COLOR, COLOR_CYAN, COLOR_BLACK);
-		init_pair(FOOD_COLOR, COLOR_GREEN, COLOR_BLACK);
-		init_pair(PORTAL_COLOR, COLOR_RED, COLOR_BLACK);
+		init_pair(LEAD_COLOR, COLOR_BLUE, bright_flag ? COLOR_BLUE : COLOR_BLACK);
+		init_pair(BLOCK_COLOR, COLOR_CYAN, bright_flag ? COLOR_CYAN : COLOR_BLACK);
+		init_pair(FOOD_COLOR, COLOR_GREEN, bright_flag ? COLOR_GREEN : COLOR_BLACK);
+		init_pair(PORTAL_COLOR, COLOR_RED, bright_flag ? COLOR_RED : COLOR_BLACK);
 	}
 
 	mvaddstr (0, 0, "move: arrow keys");
