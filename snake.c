@@ -293,7 +293,7 @@ int main (int argc, char **argv) {
 		init_pair(PORTAL_COLOR, COLOR_RED, bright_flag ? COLOR_RED : COLOR_BLACK);
 	}
 
-	mvaddstr (0, 0, "move: arrow keys");
+	mvaddstr (0, 0, "move: arrows or wasd");
 	mvaddstr (1, 0, "stop: q or die");
 	mvaddstr (2, 0, "quit: any key");
 
