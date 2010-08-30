@@ -13,20 +13,8 @@
 #define PORTAL	'^'
 #define VOID	' '
 
-#define LEAD_COLOR		1
-#define BLOCK_COLOR		2
-#define FOOD_COLOR		3
-#define PORTAL_COLOR	4
-
 #define HEAD	snake [0]
 #define TAIL	snake [len]
-
-#define DEAD		-1
-#define NORTH		1
-#define EAST		2
-#define SOUTH		3
-#define WEST		4
-#define DIR_RAND 	(rand () % 4 + 1)
 
 #define KEY_UP_ALT		'w'
 #define KEY_RIGHT_ALT	'd'
@@ -46,13 +34,31 @@
 #define H_COEF		2
 #define V_COEF		3
 
-#define DEATH_UNKNOWN	0
-#define DEATH_SELF		1
-#define DEATH_REVERSE	2
-#define DEATH_PORTAL	3
-#define DEATH_QUIT		4
-
 #define MAX_DEATH_LEN	100
+
+
+typedef enum {
+	DEAD,
+	NORTH,
+	EAST,
+	SOUTH,
+	WEST
+} direction;
+
+typedef enum {
+	COLOR_LEAD = 1,
+	COLOR_BLOCK,
+	COLOR_FOOD,
+	COLOR_PORTAL
+} item_color;
+
+typedef enum {
+	DEATH_UNKNOWN,
+	DEATH_SELF,
+	DEATH_REVERSE,
+	DEATH_PORTAL,
+	DEATH_QUIT
+} death_reason;
 
 
 typedef struct {
@@ -64,7 +70,7 @@ typedef struct {
 time_t time_start;
 int frame_wait;
 
-int dir;
+direction dir;
 int len;
 int rev;
 
@@ -72,7 +78,7 @@ block *snake;
 block food;
 block portal;
 
-int cause_of_death = DEATH_UNKNOWN;
+death_reason cause_of_death = DEATH_UNKNOWN;
 
 int use_color = 0;
 
@@ -80,7 +86,7 @@ int use_color = 0;
 static void finish (int sig);
 
 
-void do_color (int c, int on) {
+void do_color (item_color c, int on) {
 	if (use_color) {
 		if (on) {
 			attron (COLOR_PAIR (c));
@@ -107,9 +113,9 @@ void placeFood () {
 		if (0 == collideWithSnake (food.x, food.y) && food.x != portal.x && portal.y != food.y)
 			done = 1;
 	}
-	do_color (FOOD_COLOR, 1);
+	do_color (COLOR_FOOD, 1);
 	mvaddch (food.y, food.x, FOOD);
-	do_color (FOOD_COLOR, 0);
+	do_color (COLOR_FOOD, 0);
 
 	done = 0;
 	while (!done) {
@@ -118,9 +124,9 @@ void placeFood () {
 		if (0 == collideWithSnake (portal.x, portal.y) && food.x != portal.x && food.y != portal.y)
 			done = 1;
 	}
-	do_color (PORTAL_COLOR, 1);
+	do_color (COLOR_PORTAL, 1);
 	mvaddch (portal.y, portal.x, PORTAL);
-	do_color (PORTAL_COLOR, 0);
+	do_color (COLOR_PORTAL, 0);
 }
 
 block* fetchSnake () {
@@ -190,14 +196,14 @@ int moveSnake () {
 		placeFood ();
 	}
 
-	do_color (LEAD_COLOR, 1);
+	do_color (COLOR_LEAD, 1);
 	mvaddch (HEAD.y, HEAD.x, LEAD);
-	do_color (LEAD_COLOR, 0);
+	do_color (COLOR_LEAD, 0);
 
 	if (len > 0) {
-		do_color (BLOCK_COLOR, 1);
+		do_color (COLOR_BLOCK, 1);
 		mvaddch (snake [1].y, snake [1].x, BLOCK);
-		do_color (BLOCK_COLOR, 0);
+		do_color (COLOR_BLOCK, 0);
 	}
 
 	return 0;
@@ -222,7 +228,7 @@ void speedUp () {
 		frame_wait = FRAME_MIN;
 }
 
-char* stringCOD (int cause) {
+char* stringCOD (death_reason cause) {
 	char* string = calloc (MAX_DEATH_LEN + 1, sizeof (char));
 	switch (cause) {
 		case DEATH_SELF:
@@ -328,10 +334,10 @@ int main (int argc, char **argv) {
 	if (color_flag && has_colors ()) {
 		use_color = 1;
 		start_color();
-		init_pair(LEAD_COLOR, COLOR_BLUE, bright_flag ? COLOR_BLUE : COLOR_BLACK);
-		init_pair(BLOCK_COLOR, COLOR_CYAN, bright_flag ? COLOR_CYAN : COLOR_BLACK);
-		init_pair(FOOD_COLOR, COLOR_GREEN, bright_flag ? COLOR_GREEN : COLOR_BLACK);
-		init_pair(PORTAL_COLOR, COLOR_RED, bright_flag ? COLOR_RED : COLOR_BLACK);
+		init_pair(COLOR_LEAD, COLOR_BLUE, bright_flag ? COLOR_BLUE : COLOR_BLACK);
+		init_pair(COLOR_BLOCK, COLOR_CYAN, bright_flag ? COLOR_CYAN : COLOR_BLACK);
+		init_pair(COLOR_FOOD, COLOR_GREEN, bright_flag ? COLOR_GREEN : COLOR_BLACK);
+		init_pair(COLOR_PORTAL, COLOR_RED, bright_flag ? COLOR_RED : COLOR_BLACK);
 	}
 
 	mvaddstr (0, 0, "move: arrows or wasd");
@@ -352,7 +358,7 @@ int main (int argc, char **argv) {
 
 	placeFood ();
 
-	dir = DIR_RAND;
+	dir = NORTH + rand () % 4;
 
 	time_start = time (NULL);
 
