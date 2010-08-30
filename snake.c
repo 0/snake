@@ -41,14 +41,14 @@ typedef enum {
 	EAST,
 	SOUTH,
 	WEST
-} direction;
+} direction_t;
 
 typedef enum {
 	COLOR_LEAD = 1,
 	COLOR_BLOCK,
 	COLOR_FOOD,
 	COLOR_PORTAL
-} item_color;
+} item_color_t;
 
 typedef enum {
 	DEATH_UNKNOWN,
@@ -56,27 +56,27 @@ typedef enum {
 	DEATH_REVERSE,
 	DEATH_PORTAL,
 	DEATH_QUIT
-} death_reason;
+} cod_t;
 
 
 typedef struct {
 	int x;
 	int y;
-} block;
+} block_t;
 
 
 time_t time_start;
-int frame_wait;
+unsigned int frame_wait;
 
-direction dir;
-int len;
+direction_t dir;
+unsigned int len;
 int rev;
 
-block *snake;
-block food;
-block portal;
+block_t *snake;
+block_t food;
+block_t portal;
 
-death_reason cause_of_death = DEATH_UNKNOWN;
+cod_t cause_of_death = DEATH_UNKNOWN;
 
 int use_color = 0;
 
@@ -84,7 +84,7 @@ int use_color = 0;
 static void finish (int sig);
 
 
-void do_color (item_color c, int on) {
+void do_color (item_color_t c, int on) {
 	if (use_color) {
 		if (on) {
 			attron (COLOR_PAIR (c));
@@ -95,8 +95,8 @@ void do_color (item_color c, int on) {
 }
 
 int collideWithSnake (int x, int y) {
-	int i;
-	for (i = len; i >= 1; --i) {
+	unsigned int i;
+	for (i = 1; i <= len; ++i) {
 		if (snake [i].x == x && snake [i].y == y)
 			return 1;
 	}
@@ -127,8 +127,8 @@ void placeFood () {
 	do_color (COLOR_PORTAL, 0);
 }
 
-block* fetchSnake () {
-	block *tmp = malloc (MAX_LEN * sizeof (block));
+block_t* fetchSnake () {
+	block_t *tmp = malloc (MAX_LEN * sizeof (block_t));
 	if (tmp == NULL) {
 		fprintf (stderr, "Can't malloc for the snake!\n");
 		finish (0);
@@ -150,7 +150,7 @@ int moveSnake () {
 
 	mvaddch (TAIL.y, TAIL.x, VOID);
 
-	for (i = len; i >= 1; --i) {
+	for (i = len; i > 0; --i) {
 		snake [i].x = snake [i - 1].x;
 		snake [i].y = snake [i - 1].y;
 	}	
@@ -183,7 +183,7 @@ int moveSnake () {
 	if (HEAD.x == portal.x && HEAD.y == portal.y)
 		return 2;
 	if (HEAD.x == food.x && HEAD.y == food.y) {
-		int new_len = len + rand () % (GROWTH_MAX - GROWTH_MIN) + GROWTH_MIN;
+		unsigned int new_len = len + rand () % (GROWTH_MAX - GROWTH_MIN) + GROWTH_MIN;
 		if (new_len > MAX_LEN)
 			new_len = MAX_LEN;
 		while (len < new_len)
@@ -207,9 +207,9 @@ int moveSnake () {
 	return 0;
 }
 
-block* reverseSnake () {
-	int i;
-	block *tmp = fetchSnake ();
+block_t* reverseSnake () {
+	unsigned int i;
+	block_t *tmp = fetchSnake ();
 	for (i = 0; i <= len; ++i) {
 		tmp [i].x = snake [len - i].x;
 		tmp [i].y = snake [len - i].y;
@@ -221,12 +221,14 @@ block* reverseSnake () {
 }
 
 void speedUp () {
-	frame_wait -= FRAME_DIFF;
-	if (frame_wait < FRAME_MIN)
-		frame_wait = FRAME_MIN;
+	if (frame_wait >= FRAME_DIFF) {
+		frame_wait -= FRAME_DIFF;
+		if (frame_wait < FRAME_MIN)
+			frame_wait = FRAME_MIN;
+	}
 }
 
-const char* stringCOD (death_reason cause) {
+const char* stringCOD (cod_t cause) {
 	switch (cause) {
 		case DEATH_SELF:
 			return "hit yourself";
@@ -241,7 +243,7 @@ const char* stringCOD (death_reason cause) {
 	}
 }
 
-char* generate_header () {
+const char* generate_header () {
 	switch (rand () % 10) {
 		case 0:
 			return "                 _        \n"
@@ -344,8 +346,11 @@ int main (int argc, char **argv) {
 
 	HEAD.x = COLS / 2;
 	HEAD.y = LINES / 2;
+
+#if START_LEN > 0
 	while (len < START_LEN)
 		extendSnake ();
+#endif
 
 	placeFood ();
 
