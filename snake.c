@@ -34,8 +34,6 @@
 #define H_COEF		2
 #define V_COEF		3
 
-#define MAX_DEATH_LEN	100
-
 
 typedef enum {
 	DEAD,
@@ -228,26 +226,19 @@ void speedUp () {
 		frame_wait = FRAME_MIN;
 }
 
-char* stringCOD (death_reason cause) {
-	char* string = calloc (MAX_DEATH_LEN + 1, sizeof (char));
+const char* stringCOD (death_reason cause) {
 	switch (cause) {
 		case DEATH_SELF:
-			strncpy (string, "hit yourself", MAX_DEATH_LEN);
-			break;
+			return "hit yourself";
 		case DEATH_REVERSE:
-			strncpy (string, "reversed into yourself", MAX_DEATH_LEN);
-			break;
+			return "reversed into yourself";
 		case DEATH_PORTAL:
-			strncpy (string, "crashed into a portal", MAX_DEATH_LEN);
-			break;
+			return "crashed into a portal";
 		case DEATH_QUIT:
-			strncpy (string, "quit", MAX_DEATH_LEN);
-			break;
+			return "quit";
 		default:
-			strncpy (string, "died mysteriously", MAX_DEATH_LEN);
-			break;
+			return "died mysteriously";
 	}
-	return string;
 }
 
 char* generate_header () {
@@ -439,10 +430,9 @@ static void finish (int sig) {
 	if (time_total <= 0 || LINES <= 0 || COLS <= 0) {
 		printf ("You didn't even play!\n");
 	} else {
-		char* cause = stringCOD (cause_of_death);
+		const char* cause = stringCOD (cause_of_death);
 		printf ("%s with %d segments in %.0f seconds on %d lines and %d columns at %d frames per second\n",
 			cause, len, time_total, LINES, COLS, (frame_wait > 0 ? 1000000 / frame_wait * 2 / (H_COEF + V_COEF) : -1));
-		free (cause);
 	}
 
 	exit (sig ? 1 : 0);
