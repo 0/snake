@@ -128,7 +128,7 @@ void placeFood () {
 }
 
 block_t* fetchSnake () {
-	block_t *tmp = malloc (MAX_LEN * sizeof (block_t));
+	block_t *tmp = malloc ((1 + MAX_LEN) * sizeof (block_t));
 	if (tmp == NULL) {
 		fprintf (stderr, "Can't malloc for the snake!\n");
 		finish (0);
@@ -136,13 +136,20 @@ block_t* fetchSnake () {
 	return tmp;
 }
 
-int extendSnake () {
-	if (len == MAX_LEN)
-		return 1;
-	++len;
-	TAIL.x = snake [len - 1].x;
-	TAIL.y = snake [len - 1].y;
-	return 0;
+unsigned int extendSnake (unsigned int length) {
+	unsigned int max_increase = MAX_LEN - len;
+	unsigned int increase = length < max_increase ? length : max_increase;
+
+	unsigned int i;
+
+	for (i = 1; i <= increase; ++i) {
+		snake [len + i].x = TAIL.x;
+		snake [len + i].y = TAIL.y;
+	}
+
+	len += increase;
+
+	return length - increase;
 }
 
 int moveSnake () {
@@ -183,11 +190,7 @@ int moveSnake () {
 	if (HEAD.x == portal.x && HEAD.y == portal.y)
 		return 2;
 	if (HEAD.x == food.x && HEAD.y == food.y) {
-		unsigned int new_len = len + rand () % (GROWTH_MAX - GROWTH_MIN) + GROWTH_MIN;
-		if (new_len > MAX_LEN)
-			new_len = MAX_LEN;
-		while (len < new_len)
-			extendSnake ();
+		extendSnake (rand () % (GROWTH_MAX - GROWTH_MIN) + GROWTH_MIN);
 		HEAD.x = portal.x;
 		HEAD.y = portal.y;
 		mvaddch (food.y, food.x, VOID);
@@ -354,8 +357,7 @@ int main (int argc, char **argv) {
 	HEAD.y = LINES / 2;
 
 #if START_LEN > 0
-	while (len < START_LEN)
-		extendSnake ();
+	extendSnake (START_LEN);
 #endif
 
 	placeFood ();
