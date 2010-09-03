@@ -273,6 +273,7 @@ void show_usage (char *cmd) {
 		"Options:\n"
 		"\t--bright\n\t\tEnable brighter object coloring. Default off.\n"
         "\t--color\n\t\tEnable color. Default on.\n"
+        "\t--instructions\n\t\tDisplay instructions. Default on.\n"
 		"\t--help\n\t\tPrint this.\n"
 		"\n"
 		"Boolean flags --foo have corresponding --no-foo.\n",
@@ -283,12 +284,15 @@ void show_usage (char *cmd) {
 int main (int argc, char **argv) {
 	static int color_flag = 1;
 	static int bright_flag = 0;
+	static int instructions_flag = 1;
 
 	struct option longopts [] = {
 		{"bright", no_argument, &bright_flag, 1},
 		{"no-bright", no_argument, &bright_flag, 0},
 		{"color", no_argument, &color_flag, 1},
 		{"no-color", no_argument, &color_flag, 0},
+		{"instructions", no_argument, &instructions_flag, 1},
+		{"no-instructions", no_argument, &instructions_flag, 0},
 		{"help", no_argument, 0, 'h'},
 		{0, 0, 0, 0}
 	};
@@ -333,9 +337,11 @@ int main (int argc, char **argv) {
 		init_pair(COLOR_PORTAL, COLOR_RED, bright_flag ? COLOR_RED : COLOR_BLACK);
 	}
 
-	mvaddstr (0, 0, "move: arrows or wasd");
-	mvaddstr (1, 0, "stop: q or die");
-	mvaddstr (2, 0, "quit: any key");
+	if (instructions_flag) {
+		mvaddstr (0, 0, "move: arrows or wasd");
+		mvaddstr (1, 0, "stop: q or die");
+		mvaddstr (2, 0, "quit: any key");
+	}
 
 	attron (A_BOLD);
 
