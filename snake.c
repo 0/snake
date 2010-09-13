@@ -27,8 +27,9 @@
 #define GROWTH_MAX	100
 #define MAX_LEN		10000
 
-#define FRAME_INIT	5000
-#define FRAME_MIN	1000
+#define FPS_MIN		1
+#define FPS_MAX		1000
+#define FPS_INIT	80
 #define FRAME_DIFF	5
 
 #define H_COEF		2
@@ -79,6 +80,8 @@ block_t portal;
 cod_t cause_of_death = DEATH_UNKNOWN;
 
 int use_color = 0;
+
+unsigned int frame_min;
 
 
 static void finish (int sig);
@@ -226,9 +229,23 @@ block_t* reverseSnake () {
 void speedUp () {
 	if (frame_wait >= FRAME_DIFF) {
 		frame_wait -= FRAME_DIFF;
-		if (frame_wait < FRAME_MIN)
-			frame_wait = FRAME_MIN;
+		if (frame_wait < frame_min)
+			frame_wait = frame_min;
 	}
+}
+
+unsigned int delay_to_fps (unsigned int delay) {
+	if (delay > 0)
+		return 2 * 1000000 / (delay * (H_COEF + V_COEF));
+	else
+		return -1;
+}
+
+unsigned int fps_to_delay (unsigned int fps) {
+	if (fps > 0)
+		return 2 * 1000000 / (fps * (H_COEF + V_COEF));
+	else
+		return -1;
 }
 
 const char* stringCOD (cod_t cause) {
@@ -349,7 +366,8 @@ int main (int argc, char **argv) {
 	attron (A_BOLD);
 
 	len = 0;
-	frame_wait = FRAME_INIT;
+	frame_wait = fps_to_delay (FPS_INIT);
+	frame_min = fps_to_delay (FPS_MAX);
 
 	snake = fetchSnake ();
 
@@ -445,7 +463,7 @@ static void finish (int sig) {
 	} else {
 		const char* cause = stringCOD (cause_of_death);
 		printf ("%s with %d segments in %.0f seconds on %d lines and %d columns at %d frames per second\n",
-			cause, len, time_total, LINES, COLS, (frame_wait > 0 ? 1000000 / frame_wait * 2 / (H_COEF + V_COEF) : -1));
+			cause, len, time_total, LINES, COLS, delay_to_fps (frame_wait));
 	}
 
 	exit (sig ? 1 : 0);
