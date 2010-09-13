@@ -1,4 +1,5 @@
 #include <curses.h>
+#include <errno.h>
 #include <getopt.h>
 #include <signal.h>
 #include <stdlib.h>
@@ -294,10 +295,13 @@ void show_usage (char *cmd) {
 		"\t--bright\n\t\tEnable brighter object coloring. Default off.\n"
         "\t--color\n\t\tEnable color. Default on.\n"
         "\t--instructions\n\t\tDisplay instructions. Default on.\n"
+		"\t--fps-init\n\t\tInitial framerate as an integer. Default: %d\n"
+		"\t--fps-max\n\t\tMaximum framerate as an integer. Default: %d\n"
 		"\t--help\n\t\tPrint this.\n"
 		"\n"
-		"Boolean flags --foo have corresponding --no-foo.\n",
-		generate_header (), cmd);
+		"Boolean flags --foo have corresponding --no-foo.\n"
+		"Framerates must be between %d and %d, inclusive.\n",
+		generate_header (), cmd, FPS_INIT, FPS_MAX, FPS_MIN, FPS_MAX);
 }
 
 
@@ -306,6 +310,9 @@ int main (int argc, char **argv) {
 	static int bright_flag = 0;
 	static int instructions_flag = 1;
 
+	int fps_init = FPS_INIT;
+	int fps_max = FPS_MAX;
+
 	struct option longopts [] = {
 		{"bright", no_argument, &bright_flag, 1},
 		{"no-bright", no_argument, &bright_flag, 0},
@@ -313,6 +320,8 @@ int main (int argc, char **argv) {
 		{"no-color", no_argument, &color_flag, 0},
 		{"instructions", no_argument, &instructions_flag, 1},
 		{"no-instructions", no_argument, &instructions_flag, 0},
+		{"fps-init", required_argument, 0, 'i'},
+		{"fps-max", required_argument, 0, 'm'},
 		{"help", no_argument, 0, 'h'},
 		{0, 0, 0, 0}
 	};
@@ -323,17 +332,37 @@ int main (int argc, char **argv) {
 	srand (time (NULL));
 
 	do {
-		c = getopt_long (argc, argv, "h", longopts, NULL);
+		char *p;
+		c = getopt_long (argc, argv, "", longopts, NULL);
 
 		switch (c) {
 			case 'h':
 				show_usage (argv[0]);
 				exit(0);
+			case 'i':
+				fps_init = strtol(optarg, &p, 10);
+				if (errno || *p || fps_init < FPS_MIN || fps_init > FPS_MAX) {
+					fprintf (stderr, "Invalid value for fps-init: %s\n", optarg);
+					opterr_flag = 1;
+				}
+				break;
+			case 'm':
+				fps_max = strtol(optarg, &p, 10);
+				if (errno || *p || fps_max < FPS_MIN || fps_max > FPS_MAX) {
+					fprintf (stderr, "Invalid value for fps-max: %s\n", optarg);
+					opterr_flag = 1;
+				}
+				break;
 			case '?':
 				opterr_flag = 1;
 				break;
 		}
 	} while (c != -1);
+
+	if (fps_init > fps_max) {
+		fprintf (stderr, "Initial frame rate cannot be higher than the maximum.\n");
+		opterr_flag = 1;
+	}
 
 	if (opterr_flag) {
 		fprintf (stderr, "Use --help for usage information.\n");
@@ -366,8 +395,8 @@ int main (int argc, char **argv) {
 	attron (A_BOLD);
 
 	len = 0;
-	frame_wait = fps_to_delay (FPS_INIT);
-	frame_min = fps_to_delay (FPS_MAX);
+	frame_wait = fps_to_delay (fps_init);
+	frame_min = fps_to_delay (fps_max);
 
 	snake = fetchSnake ();
 
