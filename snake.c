@@ -85,6 +85,8 @@ int use_color = 0;
 
 unsigned int frame_min;
 
+int proper_exit = 0;
+
 
 static void finish (int sig);
 
@@ -494,6 +496,7 @@ int main (int argc, char **argv) {
 	}
 
 	time_stop = time (NULL);
+	proper_exit = 1;
 	mvaddstr (HEAD.y, HEAD.x, "DEAD!");
 
 	nodelay (stdscr, FALSE);
@@ -506,7 +509,12 @@ int main (int argc, char **argv) {
 
 
 static void finish (int sig) {
-	double time_total = difftime(time_stop, time_start);
+	double time_total;
+
+	if (!proper_exit)
+		time_stop = time (NULL);
+
+	time_total = difftime(time_stop, time_start);
 
 	free (snake);
 	endwin ();
