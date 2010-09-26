@@ -299,7 +299,7 @@ void show_usage (char *cmd) {
 "    --color\n"
 "        Enable color. Default on.\n"
 "    --instructions\n"
-"        Show instructions. Default on.\n"
+"        Show instructions. Default off.\n"
 "    --fps-display\n"
 "        Show current framerate. Default off.\n"
 "  Speed\n"
@@ -321,7 +321,7 @@ void show_usage (char *cmd) {
 int main (int argc, char **argv) {
 	static int color_flag = 1;
 	static int bright_flag = 0;
-	static int instructions_flag = 1;
+	static int instructions_flag = 0;
 	static int fps_display_flag = 0;
 
 	int fps_init = FPS_INIT;
