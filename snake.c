@@ -25,7 +25,7 @@
 #define START_LEN  0
 #define GROWTH_MIN 10
 #define GROWTH_MAX 100
-#define MAX_LEN    10000
+#define MAX_LEN    (10 * 1000)
 
 #define FPS_MIN       1
 #define FPS_MAX       1000
@@ -85,14 +85,14 @@ int proper_exit = 0;
 
 unsigned int delay_to_fps(unsigned int delay) {
 	if (delay > 0)
-		return 2 * 1000000 / (delay * (H_COEF + V_COEF));
+		return 2 * (1000 * 1000) / (delay * (H_COEF + V_COEF));
 	else
 		return -1;
 }
 
 unsigned int fps_to_delay(unsigned int fps) {
 	if (fps > 0)
-		return 2 * 1000000 / (fps * (H_COEF + V_COEF));
+		return 2 * (1000 * 1000) / (fps * (H_COEF + V_COEF));
 	else
 		return -1;
 }
@@ -325,7 +325,7 @@ void show_usage(char *cmd) {
 "        Show current framerate. Default off.\n");
 
 	printf(
-"  Speed\n"
+"  Gameplay\n"
 "    --fps-init <num>\n"
 "        Initial framerate (integer). Default: %d\n"
 "    --fps-max <num>\n"
@@ -387,14 +387,14 @@ int main(int argc, char **argv) {
 			case 'i':
 				fps_init = strtol(optarg, &p, 10);
 				if (errno || *p || fps_init < FPS_MIN || fps_init > FPS_MAX) {
-					fprintf(stderr, "Invalid value for fps-init: %s\n", optarg);
+					fprintf(stderr, "Invalid value for fps-init: %d (%s)\n", fps_init, optarg);
 					opterr_flag = 1;
 				}
 				break;
 			case 'm':
 				fps_max = strtol(optarg, &p, 10);
 				if (errno || *p || fps_max < FPS_MIN || fps_max > FPS_MAX) {
-					fprintf(stderr, "Invalid value for fps-max: %s\n", optarg);
+					fprintf(stderr, "Invalid value for fps-max: %d (%s)\n", fps_max, optarg);
 					opterr_flag = 1;
 				}
 				break;
@@ -405,7 +405,7 @@ int main(int argc, char **argv) {
 	}
 
 	if (fps_init > fps_max) {
-		fprintf(stderr, "Initial frame rate cannot be higher than the maximum.\n");
+		fprintf(stderr, "Initial framerate cannot be higher than the maximum.\n");
 		opterr_flag = 1;
 	}
 
@@ -432,8 +432,8 @@ int main(int argc, char **argv) {
 	}
 
 	if (instructions_flag) {
-		mvaddstr(0, 0, "move: arrows or wasd");
-		mvaddstr(1, 0, "stop: q or die");
+		mvaddstr(0, 0, "move: arrows or WASD");
+		mvaddstr(1, 0, "stop: Q or die");
 		mvaddstr(2, 0, "quit: any key");
 	}
 
