@@ -287,21 +287,31 @@ const char* generate_header () {
 
 void show_usage (char *cmd) {
 	printf (
-		"%s\n"
-		"\n"
-		"Usage: %s [options]\n"
-		"\n"
-		"Options:\n"
-		"\t--bright\n\t\tEnable brighter object coloring. Default off.\n"
-        "\t--color\n\t\tEnable color. Default on.\n"
-        "\t--instructions\n\t\tDisplay instructions. Default on.\n"
-		"\t--fps-init\n\t\tInitial framerate as an integer. Default: %d\n"
-		"\t--fps-max\n\t\tMaximum framerate as an integer. Default: %d\n"
-		"\t--help\n\t\tPrint this.\n"
-		"\n"
-		"Boolean flags --foo have corresponding --no-foo.\n"
-		"Framerates must be between %d and %d, inclusive.\n",
-		generate_header (), cmd, FPS_INIT, FPS_MAX, FPS_MIN, FPS_MAX);
+"%s\n"
+"\n"
+"USAGE: %s [options]\n"
+"\n"
+"OPTIONS:\n"
+"  Display\n"
+"    --bright\n"
+"        Brighter object coloring. Default off.\n"
+"    --color\n"
+"        Enable color. Default on.\n"
+"    --instructions\n"
+"        Show instructions. Default on.\n"
+"  Speed\n"
+"    --fps-init <num>\n"
+"        Initial framerate (integer). Default: %d\n"
+"    --fps-max <num>\n"
+"        Maximum framerate (integer). Default: %d\n"
+"  Miscellaneous\n"
+"    --help\n"
+"        Print this and exit.\n"
+"    --no-<foo>\n"
+"        Disable boolean option <foo>.\n"
+"\n"
+"Framerates must be between %d and %d, inclusive.\n"
+		, generate_header (), cmd, FPS_INIT, FPS_MAX, FPS_MIN, FPS_MAX);
 }
 
 
