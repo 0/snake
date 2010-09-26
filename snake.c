@@ -30,6 +30,7 @@
 
 #define FPS_MIN		1
 #define FPS_MAX		1000
+#define FPS_MAX_CHARS 4
 #define FPS_INIT	80
 #define FRAME_DIFF	5
 
@@ -299,6 +300,8 @@ void show_usage (char *cmd) {
 "        Enable color. Default on.\n"
 "    --instructions\n"
 "        Show instructions. Default on.\n"
+"    --fps-display\n"
+"        Show current framerate. Default off.\n"
 "  Speed\n"
 "    --fps-init <num>\n"
 "        Initial framerate (integer). Default: %d\n"
@@ -319,6 +322,7 @@ int main (int argc, char **argv) {
 	static int color_flag = 1;
 	static int bright_flag = 0;
 	static int instructions_flag = 1;
+	static int fps_display_flag = 0;
 
 	int fps_init = FPS_INIT;
 	int fps_max = FPS_MAX;
@@ -330,6 +334,8 @@ int main (int argc, char **argv) {
 		{"no-color", no_argument, &color_flag, 0},
 		{"instructions", no_argument, &instructions_flag, 1},
 		{"no-instructions", no_argument, &instructions_flag, 0},
+		{"fps-display", no_argument, &fps_display_flag, 1},
+		{"no-fps-display", no_argument, &fps_display_flag, 0},
 		{"fps-init", required_argument, 0, 'i'},
 		{"fps-max", required_argument, 0, 'm'},
 		{"help", no_argument, 0, 'h'},
@@ -338,6 +344,8 @@ int main (int argc, char **argv) {
 
 	int opterr_flag = 0;
 	int c = 0;
+
+	char fps_display_buf[FPS_MAX_CHARS + 1];
 
 	srand (time (NULL));
 
@@ -476,6 +484,11 @@ int main (int argc, char **argv) {
 				break;
 			default:
 				break;
+		}
+
+		if (fps_display_flag) {
+			sprintf(fps_display_buf, "%d", delay_to_fps(frame_wait));
+			mvaddstr (LINES - 1, 0, fps_display_buf);
 		}
 		usleep (frame_wait * (NORTH == dir || SOUTH == dir ? V_COEF : H_COEF));
 	}
