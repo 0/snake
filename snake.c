@@ -22,10 +22,10 @@
 #define KEY_LEFT_ALT  'a'
 #define KEY_QUIT      'q'
 
-#define START_LEN  0
 #define GROWTH_MIN 10
 #define GROWTH_MAX 100
-#define MAX_LEN    (10 * 1000)
+
+#define LENGTH_MAX (10 * 1000)
 
 #define FPS_MIN       1
 #define FPS_MAX       1000
@@ -80,6 +80,7 @@ cod_t cause_of_death = DEATH_UNKNOWN;
 int use_color = 0;
 
 unsigned int frame_min;
+unsigned int length_max;
 
 int proper_exit = 0;
 
@@ -178,7 +179,7 @@ void placeFood() {
 }
 
 block_t *fetchSnake() {
-	block_t *tmp = malloc((1 + MAX_LEN) * sizeof(block_t));
+	block_t *tmp = malloc((1 + length_max) * sizeof(block_t));
 	if (NULL == tmp) {
 		fprintf(stderr, "Can't malloc for the snake!\n");
 		finish(0);
@@ -187,7 +188,7 @@ block_t *fetchSnake() {
 }
 
 unsigned int extendSnake(unsigned int length) {
-	unsigned int max_increase = MAX_LEN - len;
+	unsigned int max_increase = length_max - len;
 	unsigned int increase = length < max_increase ? length : max_increase;
 
 	unsigned int i;
@@ -329,8 +330,12 @@ void show_usage(char *cmd) {
 "    --fps-init <num>\n"
 "        Initial framerate (integer). Default: %d\n"
 "    --fps-max <num>\n"
-"        Maximum framerate (integer). Default: %d\n",
-		FPS_INIT, FPS_MAX);
+"        Maximum framerate (integer). Default: %d\n"
+"    --length-init <num>\n"
+"        Initial snake length (integer). Default: 0\n"
+"    --length-max <num>\n"
+"        Maximum snake length (integer). Default: %d\n",
+		FPS_INIT, FPS_MAX, LENGTH_MAX);
 
 	printf(
 "  Miscellaneous\n"
@@ -341,8 +346,9 @@ void show_usage(char *cmd) {
 
 	printf(
 "\n"
-"Framerates must be between %d and %d, inclusive.\n",
-		FPS_MIN, FPS_MAX);
+"Framerates must be between %d and %d, inclusive.\n"
+"Lengths must be between 0 and %d, inclusive.\n",
+		FPS_MIN, FPS_MAX, LENGTH_MAX);
 }
 
 int main(int argc, char **argv) {
@@ -353,6 +359,7 @@ int main(int argc, char **argv) {
 
 	int fps_init = FPS_INIT;
 	int fps_max = FPS_MAX;
+	unsigned int length_init = 0;
 
 	struct option longopts[] = {
 		{"bright", no_argument, &bright_flag, 1},
@@ -365,6 +372,8 @@ int main(int argc, char **argv) {
 		{"no-fps-display", no_argument, &fps_display_flag, 0},
 		{"fps-init", required_argument, 0, 'i'},
 		{"fps-max", required_argument, 0, 'm'},
+		{"length-init", required_argument, 0, 'j'},
+		{"length-max", required_argument, 0, 'n'},
 		{"help", no_argument, 0, 'h'},
 		{0, 0, 0, 0}
 	};
@@ -373,6 +382,8 @@ int main(int argc, char **argv) {
 	int c = 0;
 
 	char fps_display_buf[FPS_MAX_CHARS + 1];
+
+	length_max = LENGTH_MAX;
 
 	srand(time(NULL));
 
@@ -398,6 +409,20 @@ int main(int argc, char **argv) {
 					opterr_flag = 1;
 				}
 				break;
+			case 'j':
+				length_init = strtol(optarg, &p, 10);
+				if (errno || *p || length_init > LENGTH_MAX) {
+					fprintf(stderr, "Invalid value for length-init: %u (%s)\n", length_init, optarg);
+					opterr_flag = 1;
+				}
+				break;
+			case 'n':
+				length_max = strtol(optarg, &p, 10);
+				if (errno || *p || length_max > LENGTH_MAX) {
+					fprintf(stderr, "Invalid value for length-max: %u (%s)\n", length_max, optarg);
+					opterr_flag = 1;
+				}
+				break;
 			case '?':
 				opterr_flag = 1;
 				break;
@@ -406,6 +431,11 @@ int main(int argc, char **argv) {
 
 	if (fps_init > fps_max) {
 		fprintf(stderr, "Initial framerate cannot be higher than the maximum.\n");
+		opterr_flag = 1;
+	}
+
+	if (length_init > length_max) {
+		fprintf(stderr, "Initial length cannot be higher than the maximum.\n");
 		opterr_flag = 1;
 	}
 
@@ -448,9 +478,7 @@ int main(int argc, char **argv) {
 	HEAD.x = COLS / 2;
 	HEAD.y = LINES / 2;
 
-#if START_LEN > 0
-	extendSnake(START_LEN);
-#endif
+	extendSnake(length_init);
 
 	placeFood();
 
