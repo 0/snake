@@ -1,3 +1,3 @@
-CFLAGS=-lcurses
+CFLAGS = -lcurses
 
-snake : snake.c
+snake: snake.c
