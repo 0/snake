@@ -68,7 +68,7 @@ typedef struct {
 } block_t;
 
 
-time_t time_start;
+time_t time_start, time_stop;
 unsigned int frame_wait;
 
 direction_t dir;
@@ -493,6 +493,7 @@ int main (int argc, char **argv) {
 		usleep (frame_wait * (NORTH == dir || SOUTH == dir ? V_COEF : H_COEF));
 	}
 
+	time_stop = time (NULL);
 	mvaddstr (HEAD.y, HEAD.x, "DEAD!");
 
 	nodelay (stdscr, FALSE);
@@ -505,7 +506,7 @@ int main (int argc, char **argv) {
 
 
 static void finish (int sig) {
-	double time_total = difftime(time (NULL), time_start);
+	double time_total = difftime(time_stop, time_start);
 
 	free (snake);
 	endwin ();
