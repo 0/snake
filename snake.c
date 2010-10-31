@@ -88,6 +88,7 @@ int use_color = 0;
 unsigned int frame_min;
 unsigned int length_max;
 
+volatile int bailing = 0;
 int proper_exit = 0;
 
 unsigned int delay_to_fps(unsigned int delay) {
@@ -119,7 +120,7 @@ const char *stringCOD(cod_t cause) {
 	}
 }
 
-static void finish(int sig) {
+void cleanup() {
 	double time_total;
 
 	if (!proper_exit)
@@ -137,8 +138,10 @@ static void finish(int sig) {
 		printf("%s with %d segments in %.0f seconds on %d lines and %d columns at %d frames per second\n",
 			cause, len, time_total, LINES, COLS, delay_to_fps(frame_wait));
 	}
+}
 
-	exit(sig ? 1 : 0);
+void bail(int sig) {
+	bailing = sig;
 }
 
 void do_color(item_color_t c, int on) {
@@ -194,7 +197,7 @@ block_t *fetchSnake() {
 	block_t *tmp = malloc((1 + length_max) * sizeof(block_t));
 	if (NULL == tmp) {
 		fprintf(stderr, "Can't malloc for the snake!\n");
-		finish(0);
+		exit(1);
 	}
 	return tmp;
 }
@@ -408,7 +411,7 @@ int main(int argc, char **argv) {
 		switch (c) {
 			case 'h':
 				show_usage(argv[0]);
-				exit(0);
+				return 0;
 			case 'i':
 				fps_init = strtol(optarg, &p, 10);
 				if (errno || *p || fps_init < FPS_MIN || fps_init > FPS_MAX) {
@@ -455,10 +458,11 @@ int main(int argc, char **argv) {
 
 	if (opterr_flag) {
 		fprintf(stderr, "Use --help for usage information.\n");
-		exit(1);
+		return 1;
 	}
 
-	signal(SIGINT, finish);
+	signal(SIGINT, bail);
+	signal(SIGQUIT, bail);
 
 	initscr();
 	keypad(stdscr, TRUE);
@@ -565,8 +569,9 @@ int main(int argc, char **argv) {
 					break;
 				case KEY_QUIT:
 					cause_of_death = DEATH_QUIT;
-					finish(0);
-					break;
+
+					cleanup();
+					return 0;
 				case KEY_RESIZE:
 					if (HEAD.x > COLS)
 						HEAD.x = COLS - 1;
@@ -604,6 +609,11 @@ int main(int argc, char **argv) {
 			mvaddstr(LINES - 1, 0, fps_display_buf);
 		}
 
+		if (bailing) {
+			cleanup();
+			return 1;
+		}
+
 		usleep(sleep_time > SLEEP_MAX ? SLEEP_MAX : sleep_time);
 	}
 
@@ -614,7 +624,6 @@ int main(int argc, char **argv) {
 	nodelay(stdscr, FALSE);
 	getch();
 
-	finish(0);
-
+	cleanup();
 	return 0;
 }
