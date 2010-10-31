@@ -75,7 +75,7 @@ unsigned int len;
 int rev;
 
 block_t *snake;
-block_t food;
+block_t food = {-1, -1};
 block_t portal;
 
 cod_t cause_of_death = DEATH_UNKNOWN;
@@ -159,6 +159,12 @@ int collideWithSnake(int x, int y) {
 
 void placeFood() {
 	int done = 0;
+
+	if (food.x >= 0) {
+		mvaddch(food.y, food.x, CH_VOID);
+		mvaddch(portal.y, portal.x, CH_VOID);
+	}
+
 	while (!done) {
 		food.x = rand() % COLS;
 		food.y = rand() % LINES;
@@ -249,7 +255,6 @@ int moveSnake() {
 		extendSnake(rand() % (GROWTH_MAX - GROWTH_MIN) + GROWTH_MIN);
 		HEAD.x = portal.x;
 		HEAD.y = portal.y;
-		mvaddch(food.y, food.x, CH_VOID);
 		placeFood();
 	}
 
@@ -549,6 +554,15 @@ int main(int argc, char **argv) {
 				case KEY_QUIT:
 					cause_of_death = DEATH_QUIT;
 					finish(0);
+					break;
+				case KEY_RESIZE:
+					if (HEAD.x > COLS)
+						HEAD.x = COLS - 1;
+
+					if (HEAD.y > LINES)
+						HEAD.y = LINES - 1;
+
+					placeFood();
 					break;
 				default:
 					break;
