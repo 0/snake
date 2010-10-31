@@ -397,6 +397,8 @@ int main(int argc, char **argv) {
 
 	char fps_display_buf[FPS_MAX_CHARS + 1];
 
+	int cursor_visible = 0;
+
 	struct timeval next_frame;
 	gettimeofday(&next_frame, NULL);
 
@@ -467,7 +469,8 @@ int main(int argc, char **argv) {
 	initscr();
 	keypad(stdscr, TRUE);
 	nodelay(stdscr, TRUE);
-	curs_set(0);
+	if (ERR == curs_set(0))
+		cursor_visible = 1;
 	noecho();
 
 	if (color_flag && has_colors()) {
@@ -613,6 +616,9 @@ int main(int argc, char **argv) {
 			cleanup();
 			return 1;
 		}
+
+		if (cursor_visible)
+			move(0, 0);
 
 		usleep(sleep_time > SLEEP_MAX ? SLEEP_MAX : sleep_time);
 	}
