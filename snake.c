@@ -21,6 +21,7 @@
 #define KEY_RIGHT_ALT 'd'
 #define KEY_DOWN_ALT  's'
 #define KEY_LEFT_ALT  'a'
+#define KEY_PAUSE     'p'
 #define KEY_QUIT      'q'
 
 #define GROWTH_MIN 10
@@ -69,6 +70,8 @@ typedef struct {
 
 time_t time_start, time_stop;
 unsigned int frame_wait;
+
+int paused = 0;
 
 direction_t dir;
 unsigned int len;
@@ -473,9 +476,10 @@ int main(int argc, char **argv) {
 	}
 
 	if (instructions_flag) {
-		mvaddstr(0, 0, "move: arrows or WASD");
-		mvaddstr(1, 0, "stop: Q or die");
-		mvaddstr(2, 0, "quit: any key");
+		mvaddstr(0, 0, "move:  arrows or WASD");
+		mvaddstr(1, 0, "stop:  Q or die");
+		mvaddstr(2, 0, "pause: P");
+		mvaddstr(3, 0, "quit:  any key");
 	}
 
 	attron(A_BOLD);
@@ -551,6 +555,14 @@ int main(int argc, char **argv) {
 					dir = WEST;
 					speedUp();
 					break;
+				case KEY_PAUSE:
+					paused = !paused;
+					if (paused)
+						mvaddstr(HEAD.y, HEAD.x, "PAUSED");
+					else
+						mvaddstr(HEAD.y, HEAD.x, "      ");
+
+					break;
 				case KEY_QUIT:
 					cause_of_death = DEATH_QUIT;
 					finish(0);
@@ -569,7 +581,7 @@ int main(int argc, char **argv) {
 			}
 		}
 
-		if (update) {
+		if (!paused && update) {
 			switch (moveSnake()) {
 				case 1:
 					if (rev)
