@@ -4,6 +4,7 @@
 #include <signal.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/time.h>
 #include <time.h>
 #include <unistd.h>
 
@@ -32,6 +33,8 @@
 #define FPS_MAX_CHARS 4
 #define FPS_INIT      80
 #define FRAME_DIFF    5
+
+#define SLEEP_MAX (10 * 1000)
 
 #define H_COEF 2
 #define V_COEF 3
@@ -383,6 +386,9 @@ int main(int argc, char **argv) {
 
 	char fps_display_buf[FPS_MAX_CHARS + 1];
 
+	struct timeval next_frame;
+	gettimeofday(&next_frame, NULL);
+
 	length_max = LENGTH_MAX;
 
 	srand(time(NULL));
@@ -487,66 +493,92 @@ int main(int argc, char **argv) {
 	time_start = time(NULL);
 
 	while (dir != DEAD) {
-		rev = 0;
+		struct timeval until_next;
+		unsigned int sleep_time;
 
-		switch (getch()) {
-			case KEY_UP:
-			case KEY_UP_ALT:
-				if (SOUTH == dir)
-					snake = reverseSnake();
-				dir = NORTH;
-				speedUp();
-				break;
-			case KEY_RIGHT:
-			case KEY_RIGHT_ALT:
-				if (WEST == dir)
-					snake = reverseSnake();
-				dir = EAST;
-				speedUp();
-				break;
-			case KEY_DOWN:
-			case KEY_DOWN_ALT:
-				if (NORTH == dir)
-					snake = reverseSnake();
-				dir = SOUTH;
-				speedUp();
-				break;
-			case KEY_LEFT:
-			case KEY_LEFT_ALT:
-				if (EAST == dir)
-					snake = reverseSnake();
-				dir = WEST;
-				speedUp();
-				break;
-			case KEY_QUIT:
-				cause_of_death = DEATH_QUIT;
-				finish(0);
-				break;
-			default:
-				break;
+		int update = 0;
+
+		struct timeval now;
+		gettimeofday(&now, NULL);
+
+		if (timercmp(&now, &next_frame, >)) {
+			sleep_time = frame_wait * (NORTH == dir || SOUTH == dir ? V_COEF : H_COEF);
+
+			until_next.tv_sec = sleep_time / (1000 * 1000);
+			until_next.tv_usec = sleep_time % (1000 * 1000);
+			timeradd(&now, &until_next, &next_frame);
+
+			update = 1;
+		} else {
+			timersub(&next_frame, &now, &until_next);
+			sleep_time = until_next.tv_sec * (1000 * 1000) + until_next.tv_usec;
 		}
 
-		switch (moveSnake()) {
-			case 1:
-				if (rev)
-					cause_of_death = DEATH_REVERSE;
-				else
-					cause_of_death = DEATH_SELF;
-				dir = DEAD;
-				break;
-			case 2:
-				cause_of_death = DEATH_PORTAL;
-				dir = DEAD;
-				break;
-			default:
-				break;
+		rev = 0;
+
+		while (ERR != (c = getch())) {
+			switch (c) {
+				case KEY_UP:
+				case KEY_UP_ALT:
+					if (SOUTH == dir)
+						snake = reverseSnake();
+					dir = NORTH;
+					speedUp();
+					break;
+				case KEY_RIGHT:
+				case KEY_RIGHT_ALT:
+					if (WEST == dir)
+						snake = reverseSnake();
+					dir = EAST;
+					speedUp();
+					break;
+				case KEY_DOWN:
+				case KEY_DOWN_ALT:
+					if (NORTH == dir)
+						snake = reverseSnake();
+					dir = SOUTH;
+					speedUp();
+					break;
+				case KEY_LEFT:
+				case KEY_LEFT_ALT:
+					if (EAST == dir)
+						snake = reverseSnake();
+					dir = WEST;
+					speedUp();
+					break;
+				case KEY_QUIT:
+					cause_of_death = DEATH_QUIT;
+					finish(0);
+					break;
+				default:
+					break;
+			}
+		}
+
+		if (update) {
+			switch (moveSnake()) {
+				case 1:
+					if (rev)
+						cause_of_death = DEATH_REVERSE;
+					else
+						cause_of_death = DEATH_SELF;
+					dir = DEAD;
+					break;
+				case 2:
+					cause_of_death = DEATH_PORTAL;
+					dir = DEAD;
+					break;
+				default:
+					break;
+			}
 		}
 
 		if (fps_display_flag) {
 			sprintf(fps_display_buf, "%d", delay_to_fps(frame_wait));
 			mvaddstr(LINES - 1, 0, fps_display_buf);
 		}
-		usleep(frame_wait * (NORTH == dir || SOUTH == dir ? V_COEF : H_COEF));
+
+		usleep(sleep_time > SLEEP_MAX ? SLEEP_MAX : sleep_time);
 	}
 
 	time_stop = time(NULL);
