@@ -14,9 +14,6 @@
 #define CH_PORTAL '^'
 #define CH_VOID   ' '
 
-#define HEAD snake[0]
-#define TAIL snake[len]
-
 #define KEY_UP_ALT    'w'
 #define KEY_RIGHT_ALT 'd'
 #define KEY_DOWN_ALT  's'
@@ -63,9 +60,15 @@ enum cod {
 	DEATH_QUIT
 };
 
-struct block {
+struct posn {
 	int x;
 	int y;
+};
+
+struct block {
+	struct posn p;
+	struct block *next;
+	struct block *prev;
 };
 
 time_t time_start, time_stop;
@@ -77,9 +80,9 @@ enum direction dir;
 unsigned int len;
 int rev;
 
-struct block *snake;
-struct block food = {-1, -1};
-struct block portal;
+struct block *snake_head, *snake_tail;
+struct posn food = {-1, -1};
+struct posn portal;
 
 enum cod cause_of_death = DEATH_UNKNOWN;
 
@@ -122,13 +125,20 @@ const char *stringCOD(enum cod cause) {
 
 void cleanup() {
 	double time_total;
+	struct block *b;
 
 	if (!proper_exit)
 		time_stop = time(NULL);
 
 	time_total = difftime(time_stop, time_start);
 
-	free(snake);
+	b = snake_head;
+	while (b) {
+		struct block *b_tmp = b->next;
+		free(b);
+		b = b_tmp;
+	}
+
 	endwin();
 
 	if (time_total <= 0 || LINES <= 0 || COLS <= 0) {
@@ -154,52 +164,53 @@ void do_color(enum item_color c, int on) {
 	}
 }
 
-int collideWithSnake(int x, int y) {
-	unsigned int i;
-	for (i = 1; i <= len; ++i) {
-		if (snake[i].x == x && snake[i].y == y)
+int collideWithSnake(int x, int y, int includeHead) {
+	struct block *b = includeHead ? snake_head : snake_head->next;
+
+	while (b) {
+		if (b->p.x == x && b->p.y == y)
 			return 1;
+
+		b = b->next;
 	}
+
 	return 0;
 }
 
 void placeFood() {
-	int done = 0;
-
 	if (food.x >= 0) {
 		mvaddch(food.y, food.x, CH_VOID);
 		mvaddch(portal.y, portal.x, CH_VOID);
 	}
 
-	while (!done) {
+	do {
 		food.x = rand() % COLS;
 		food.y = rand() % LINES;
-		if (0 == collideWithSnake(food.x, food.y) && food.x != portal.x && portal.y != food.y)
-			done = 1;
-	}
+	} while (0 != collideWithSnake(food.x, food.y, 1));
+
 	do_color(COLOR_FOOD, 1);
 	mvaddch(food.y, food.x, CH_FOOD);
 	do_color(COLOR_FOOD, 0);
 
-	done = 0;
-	while (!done) {
+	do {
 		portal.x = rand() % COLS;
 		portal.y = rand() % LINES;
-		if (0 == collideWithSnake(portal.x, portal.y) && food.x != portal.x && food.y != portal.y)
-			done = 1;
-	}
+	} while (0 != collideWithSnake(portal.x, portal.y, 1) || food.x == portal.x || food.y == portal.y);
+
 	do_color(COLOR_PORTAL, 1);
 	mvaddch(portal.y, portal.x, CH_PORTAL);
 	do_color(COLOR_PORTAL, 0);
 }
 
-struct block *fetchSnake() {
-	struct block *tmp = malloc((1 + length_max) * sizeof(struct block));
-	if (NULL == tmp) {
-		fprintf(stderr, "Can't malloc for the snake!\n");
+struct block *fetchBlock() {
+	struct block *ret = calloc(1, sizeof(struct block));
+
+	if (NULL == ret) {
+		fprintf(stderr, "Can't get memory for the snake!\n");
 		exit(1);
 	}
-	return tmp;
+
+	return ret;
 }
 
 unsigned int extendSnake(unsigned int length) {
@@ -208,9 +219,16 @@ unsigned int extendSnake(unsigned int length) {
 
 	unsigned int i;
 
-	for (i = 1; i <= increase; ++i) {
-		snake[len + i].x = TAIL.x;
-		snake[len + i].y = TAIL.y;
+	for (i = 0; i < increase; ++i) {
+		struct block *new = fetchBlock();
+
+		new->p.x = snake_tail->p.x;
+		new->p.y = snake_tail->p.y;
+		new->prev = snake_tail;
+		new->next = NULL;
+
+		snake_tail->next = new;
+		snake_tail = new;
 	}
 
 	len += increase;
@@ -219,75 +237,83 @@ unsigned int extendSnake(unsigned int length) {
 }
 
 int moveSnake() {
-	int i;
+	struct block *b;
 
-	mvaddch(TAIL.y, TAIL.x, CH_VOID);
+	mvaddch(snake_tail->p.y, snake_tail->p.x, CH_VOID);
 
-	for (i = len; i > 0; --i) {
-		snake[i].x = snake[i - 1].x;
-		snake[i].y = snake[i - 1].y;
+	b = snake_tail;
+	while (b->prev) {
+		b->p.x = b->prev->p.x;
+		b->p.y = b->prev->p.y;
+		b = b->prev;
 	}
 
 	switch (dir) {
 		case NORTH:
-			HEAD.y--;
-			if (HEAD.y < 0)
-				HEAD.y = LINES - 1;
+			snake_head->p.y--;
+			if (snake_head->p.y < 0)
+				snake_head->p.y = LINES - 1;
 			break;
 		case EAST:
-			HEAD.x++;
-			if (HEAD.x >= COLS)
-				HEAD.x = 0;
+			snake_head->p.x++;
+			if (snake_head->p.x >= COLS)
+				snake_head->p.x = 0;
 			break;
 		case SOUTH:
-			HEAD.y++;
-			if (HEAD.y >= LINES)
-				HEAD.y = 0;
+			snake_head->p.y++;
+			if (snake_head->p.y >= LINES)
+				snake_head->p.y = 0;
 			break;
 		case WEST:
-			HEAD.x--;
-			if (HEAD.x < 0)
-				HEAD.x = COLS - 1;
+			snake_head->p.x--;
+			if (snake_head->p.x < 0)
+				snake_head->p.x = COLS - 1;
 			break;
 		default:
 			break;
 	}
 
-	if (1 == collideWithSnake(HEAD.x, HEAD.y))
+	if (1 == collideWithSnake(snake_head->p.x, snake_head->p.y, 0))
 		return 1;
-	if (HEAD.x == portal.x && HEAD.y == portal.y)
+	if (snake_head->p.x == portal.x && snake_head->p.y == portal.y)
 		return 2;
-	if (HEAD.x == food.x && HEAD.y == food.y) {
+	if (snake_head->p.x == food.x && snake_head->p.y == food.y) {
 		extendSnake(rand() % (GROWTH_MAX - GROWTH_MIN) + GROWTH_MIN);
-		HEAD.x = portal.x;
-		HEAD.y = portal.y;
+		snake_head->p.x = portal.x;
+		snake_head->p.y = portal.y;
 		placeFood();
 	}
 
 	do_color(COLOR_LEAD, 1);
-	mvaddch(HEAD.y, HEAD.x, CH_HEAD);
+	mvaddch(snake_head->p.y, snake_head->p.x, CH_HEAD);
 	do_color(COLOR_LEAD, 0);
 
-	if (len > 0) {
+	if (snake_head->next) {
 		do_color(COLOR_BLOCK, 1);
-		mvaddch(snake[1].y, snake[1].x, CH_BODY);
+		mvaddch(snake_head->next->p.y, snake_head->next->p.x, CH_BODY);
 		do_color(COLOR_BLOCK, 0);
 	}
 
 	return 0;
 }
 
-struct block *reverseSnake() {
-	unsigned int i;
-	struct block *tmp = fetchSnake();
-	for (i = 0; i <= len; ++i) {
-		tmp[i].x = snake[len - i].x;
-		tmp[i].y = snake[len - i].y;
+void reverseSnake() {
+	struct block *b = snake_head;
+	struct block *b_tmp;
+
+	while (b) {
+		b_tmp = b->next;
+		b->next = b->prev;
+		b->prev = b_tmp;
+
+		b = b_tmp;
 	}
-	free(snake);
+
+	b_tmp = snake_head;
+	snake_head = snake_tail;
+	snake_tail = b_tmp;
 
 	rev = 1;
-	return tmp;
 }
 
 void speedUp() {
@@ -495,10 +521,10 @@ int main(int argc, char **argv) {
 	frame_wait = fps_to_delay(fps_init);
 	frame_min = fps_to_delay(fps_max);
 
-	snake = fetchSnake();
+	snake_head = snake_tail = fetchBlock();
 
-	HEAD.x = COLS / 2;
-	HEAD.y = LINES / 2;
+	snake_head->p.x = COLS / 2;
+	snake_head->p.y = LINES / 2;
 
 	extendSnake(length_init);
 
@@ -537,37 +563,37 @@ int main(int argc, char **argv) {
 				case KEY_UP:
 				case KEY_UP_ALT:
 					if (SOUTH == dir)
-						snake = reverseSnake();
+						reverseSnake();
 					dir = NORTH;
 					speedUp();
 					break;
 				case KEY_RIGHT:
 				case KEY_RIGHT_ALT:
 					if (WEST == dir)
-						snake = reverseSnake();
+						reverseSnake();
 					dir = EAST;
 					speedUp();
 					break;
 				case KEY_DOWN:
 				case KEY_DOWN_ALT:
 					if (NORTH == dir)
-						snake = reverseSnake();
+						reverseSnake();
 					dir = SOUTH;
 					speedUp();
 					break;
 				case KEY_LEFT:
 				case KEY_LEFT_ALT:
 					if (EAST == dir)
-						snake = reverseSnake();
+						reverseSnake();
 					dir = WEST;
 					speedUp();
 					break;
 				case KEY_PAUSE:
 					paused = !paused;
 					if (paused)
-						mvaddstr(HEAD.y, HEAD.x, "PAUSED");
+						mvaddstr(snake_head->p.y, snake_head->p.x, "PAUSED");
 					else
-						mvaddstr(HEAD.y, HEAD.x, "      ");
+						mvaddstr(snake_head->p.y, snake_head->p.x, "      ");
 
 					break;
 				case KEY_QUIT:
@@ -576,11 +602,11 @@ int main(int argc, char **argv) {
 					cleanup();
 					return 0;
 				case KEY_RESIZE:
-					if (HEAD.x > COLS)
-						HEAD.x = COLS - 1;
+					if (snake_head->p.x > COLS)
+						snake_head->p.x = COLS - 1;
 
-					if (HEAD.y > LINES)
-						HEAD.y = LINES - 1;
+					if (snake_head->p.y > LINES)
+						snake_head->p.y = LINES - 1;
 
 					placeFood();
 					break;
@@ -625,7 +651,7 @@ int main(int argc, char **argv) {
 
 	time_stop = time(NULL);
 	proper_exit = 1;
-	mvaddstr(HEAD.y, HEAD.x, "DEAD!");
+	mvaddstr(snake_head->p.y, snake_head->p.x, "DEAD!");
 
 	nodelay(stdscr, FALSE);
 	getch();
