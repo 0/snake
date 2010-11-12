@@ -40,48 +40,48 @@
 #define H_COEF 2
 #define V_COEF 3
 
-typedef enum {
+enum direction {
 	DEAD,
 	NORTH,
 	EAST,
 	SOUTH,
 	WEST
-} direction_t;
+};
 
-typedef enum {
+enum item_color {
 	COLOR_LEAD = 1,
 	COLOR_BLOCK,
 	COLOR_FOOD,
 	COLOR_PORTAL
-} item_color_t;
+};
 
-typedef enum {
+enum cod {
 	DEATH_UNKNOWN,
 	DEATH_SELF,
 	DEATH_REVERSE,
 	DEATH_PORTAL,
 	DEATH_QUIT
-} cod_t;
+};
 
-typedef struct {
+struct block {
 	int x;
 	int y;
-} block_t;
+};
 
 time_t time_start, time_stop;
 unsigned int frame_wait;
 
 int paused = 0;
 
-direction_t dir;
+enum direction dir;
 unsigned int len;
 int rev;
 
-block_t *snake;
-block_t food = {-1, -1};
-block_t portal;
+struct block *snake;
+struct block food = {-1, -1};
+struct block portal;
 
-cod_t cause_of_death = DEATH_UNKNOWN;
+enum cod cause_of_death = DEATH_UNKNOWN;
 
 int use_color = 0;
 
@@ -105,7 +105,7 @@ unsigned int fps_to_delay(unsigned int fps) {
 		return -1;
 }
 
-const char *stringCOD(cod_t cause) {
+const char *stringCOD(enum cod cause) {
 	switch (cause) {
 		case DEATH_SELF:
 			return "hit yourself";
@@ -144,7 +144,7 @@ void bail(int sig) {
 	bailing = sig;
 }
 
-void do_color(item_color_t c, int on) {
+void do_color(enum item_color c, int on) {
 	if (use_color) {
 		if (on) {
 			attron(COLOR_PAIR(c));
@@ -193,8 +193,8 @@ void placeFood() {
 	do_color(COLOR_PORTAL, 0);
 }
 
-block_t *fetchSnake() {
-	block_t *tmp = malloc((1 + length_max) * sizeof(block_t));
+struct block *fetchSnake() {
+	struct block *tmp = malloc((1 + length_max) * sizeof(struct block));
 	if (NULL == tmp) {
 		fprintf(stderr, "Can't malloc for the snake!\n");
 		exit(1);
@@ -277,9 +277,9 @@ int moveSnake() {
 	return 0;
 }
 
-block_t *reverseSnake() {
+struct block *reverseSnake() {
 	unsigned int i;
-	block_t *tmp = fetchSnake();
+	struct block *tmp = fetchSnake();
 	for (i = 0; i <= len; ++i) {
 		tmp[i].x = snake[len - i].x;
 		tmp[i].y = snake[len - i].y;
