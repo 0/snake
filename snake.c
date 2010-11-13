@@ -311,6 +311,32 @@ unsigned int speedUp(unsigned int frame_wait, unsigned int frame_min) {
 	return frame_wait;
 }
 
+void redraw(struct block *head, struct posn food, struct posn portal) {
+	struct block *b;
+
+	erase();
+
+	do_color(COLOR_LEAD, 1);
+	mvaddch(head->p.y, head->p.x, CH_HEAD);
+	do_color(COLOR_LEAD, 0);
+
+	b = head->next;
+	do_color(COLOR_BLOCK, 1);
+	while (b) {
+		mvaddch(b->p.y, b->p.x, CH_BODY);
+		b = b->next;
+	}
+	do_color(COLOR_BLOCK, 0);
+
+	do_color(COLOR_FOOD, 1);
+	mvaddch(food.y, food.x, CH_FOOD);
+	do_color(COLOR_FOOD, 0);
+
+	do_color(COLOR_PORTAL, 1);
+	mvaddch(portal.y, portal.x, CH_PORTAL);
+	do_color(COLOR_PORTAL, 0);
+}
+
 const char *generate_header() {
 	switch (rand() % 10) {
 		case 0:
@@ -601,7 +627,7 @@ int main(int argc, char **argv) {
 					if (paused)
 						mvaddstr(s.head->p.y, s.head->p.x, "PAUSED");
 					else
-						mvaddstr(s.head->p.y, s.head->p.x, "      ");
+						redraw(s.head, food, portal);
 
 					break;
 				case KEY_QUIT:
