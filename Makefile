@@ -1,10 +1,21 @@
-CFLAGS = -lcurses
+CFLAGS = -Wall -Wextra
+LDFLAGS = -lcurses
+
+game_sources = $(wildcard *.c)
+game_depends = $(game_sources:.c=.dep)
+game_objects = $(game_sources:.c=.o)
 
 all: snake
 
-snake: snake.c
+snake: $(game_objects)
+
+%.dep: %.c
+	@set -e; $(CC) -MM $(CFLAGS) $< | \
+	sed 's,\($*\)\.o[ :]*,\1.o $@: ,g' > $@
+
+-include $(game_depends)
 
 clean:
-	-rm -f snake
+	-rm -f snake $(game_objects) $(game_depends)
 
 .PHONY: all clean

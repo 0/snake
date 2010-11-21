@@ -1,0 +1,110 @@
+#include <curses.h>
+#include <stdlib.h>
+
+#include "game.h"
+#include "interface.h"
+
+extern int use_color;
+
+void do_color(enum item_color c, int on) {
+	if (use_color) {
+		if (on) {
+			attron(COLOR_PAIR(c));
+		} else {
+			attroff(COLOR_PAIR(c));
+		}
+	}
+}
+
+void redraw(struct block *head, struct posn food, struct posn portal) {
+	struct block *b;
+
+	erase();
+
+	do_color(COLOR_LEAD, 1);
+	mvaddch(head->p.y, head->p.x, CH_HEAD);
+	do_color(COLOR_LEAD, 0);
+
+	b = head->next;
+	do_color(COLOR_BLOCK, 1);
+	while (b) {
+		mvaddch(b->p.y, b->p.x, CH_BODY);
+		b = b->next;
+	}
+	do_color(COLOR_BLOCK, 0);
+
+	do_color(COLOR_FOOD, 1);
+	mvaddch(food.y, food.x, CH_FOOD);
+	do_color(COLOR_FOOD, 0);
+
+	do_color(COLOR_PORTAL, 1);
+	mvaddch(portal.y, portal.x, CH_PORTAL);
+	do_color(COLOR_PORTAL, 0);
+}
+
+const char *generate_header() {
+	switch (rand() % 10) {
+		case 0:
+			return "                 _        \n"
+				" ___ _ __   __ _| | _____ \n"
+				"/ __| '_ \\ / _` | |/ / _ \\\n"
+				"\\__ \\ | | | (_| |   <  __/\n"
+				"|___/_| |_|\\__,_|_|\\_\\___|";
+		case 1:
+			return "Yet another snake clone...";
+		case 2:
+			return "Snake's Not A Recursive Acronym";
+		case 3:
+			return "Snake's Not A Knotted Eel";
+		case 4:
+			return "snake!";
+		default:
+			return "snake";
+	}
+}
+
+void show_usage(char *cmd) {
+	printf(
+"%s\n"
+"\n"
+"USAGE: %s [options]\n"
+"\n"
+"OPTIONS:\n",
+		generate_header(), cmd);
+
+	printf(
+"  Display\n"
+"    --bright\n"
+"        Brighter object coloring. Default off.\n"
+"    --color\n"
+"        Enable color. Default on.\n"
+"    --instructions\n"
+"        Show instructions. Default off.\n"
+"    --fps-display\n"
+"        Show current framerate. Default off.\n");
+
+	printf(
+"  Gameplay\n"
+"    --fps-init <num>\n"
+"        Initial framerate (integer). Default: %d\n"
+"    --fps-max <num>\n"
+"        Maximum framerate (integer). Default: %d\n"
+"    --length-init <num>\n"
+"        Initial snake length (integer). Default: 0\n"
+"    --length-max <num>\n"
+"        Maximum snake length (integer). Default: %d\n",
+		FPS_INIT, FPS_MAX, LENGTH_MAX);
+
+	printf(
+"  Miscellaneous\n"
+"    --help\n"
+"        Print this and exit.\n"
+"    --no-<foo>\n"
+"        Disable boolean option <foo>.\n");
+
+	printf(
+"\n"
+"Framerates must be between %d and %d, inclusive.\n"
+"Lengths must be between 0 and %d, inclusive.\n",
+		FPS_MIN, FPS_MAX, LENGTH_MAX);
+}
