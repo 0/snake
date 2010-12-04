@@ -7,10 +7,10 @@
 #define CH_PORTAL '^'
 #define CH_VOID   ' '
 
-#define KEY_UP_ALT    'w'
-#define KEY_RIGHT_ALT 'd'
-#define KEY_DOWN_ALT  's'
-#define KEY_LEFT_ALT  'a'
+#define KEY_LEFT_ALT  'h'
+#define KEY_DOWN_ALT  'j'
+#define KEY_UP_ALT    'k'
+#define KEY_RIGHT_ALT 'l'
 #define KEY_PAUSE     'p'
 #define KEY_QUIT      'q'
 
