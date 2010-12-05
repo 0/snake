@@ -3,9 +3,9 @@
 #include "snake.h"
 #include "things.h"
 
-int collideWithSnake(struct block *head, int x, int y) {
+int collideWithSnake(struct block *head, struct posn p) {
 	while (head) {
-		if (head->p.x == x && head->p.y == y)
+		if (head->p.x == p.x && head->p.y == p.y)
 			return 1;
 
 		head = head->next;
@@ -14,11 +14,11 @@ int collideWithSnake(struct block *head, int x, int y) {
 	return 0;
 }
 
-int inSnakePath(struct snake s, int x, int y) {
+int inSnakePath(struct snake s, struct posn p) {
 	if (isSnakeVertical(s)) {
-		return (x == s.head->p.x);
+		return (p.x == s.head->p.x);
 	} else {
-		return (y == s.head->p.y);
+		return (p.y == s.head->p.y);
 	}
 }
 

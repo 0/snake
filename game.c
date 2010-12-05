@@ -22,12 +22,12 @@ void placeFood(int cols, int lines, struct snake s, struct posn *food, struct po
 	do {
 		food->x = rand() % cols;
 		food->y = rand() % lines;
-	} while (0 != collideWithSnake(s.head, food->x, food->y) || 0 != inSnakePath(s, food->x, food->y));
+	} while (0 != collideWithSnake(s.head, *food) || 0 != inSnakePath(s, *food));
 
 	do {
 		portal->x = rand() % cols;
 		portal->y = rand() % lines;
-	} while (0 != collideWithSnake(s.head, portal->x, portal->y) || 0 != inSnakePath(s, portal->x, portal->y) || food->x == portal->x || food->y == portal->y);
+	} while (0 != collideWithSnake(s.head, *portal) || 0 != inSnakePath(s, *portal) || food->x == portal->x || food->y == portal->y);
 }
 
 int moveSnake(int cols, int lines, struct snake *s, struct posn *food, struct posn *portal, unsigned int length_max) {
@@ -65,7 +65,7 @@ int moveSnake(int cols, int lines, struct snake *s, struct posn *food, struct po
 			break;
 	}
 
-	if (1 == collideWithSnake(s->head->next, s->head->p.x, s->head->p.y))
+	if (1 == collideWithSnake(s->head->next, s->head->p))
 		return 1;
 
 	if (s->head->p.x == portal->x && s->head->p.y == portal->y)

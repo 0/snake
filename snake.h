@@ -18,8 +18,8 @@ struct snake {
 	enum direction dir;
 };
 
-int collideWithSnake(struct block *head, int x, int y);
-int inSnakePath(struct snake s, int x, int y);
+int collideWithSnake(struct block *head, struct posn p);
+int inSnakePath(struct snake s, struct posn p);
 unsigned int extendSnake(struct snake *s, unsigned int length, unsigned int length_max);
 void reverseSnake(struct snake *s);
 int isSnakeVertical(struct snake s);
