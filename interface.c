@@ -16,10 +16,22 @@ void do_color(enum item_color c, int on) {
 	}
 }
 
-void redraw(struct block *head, struct posn food, struct posn portal) {
+void print_instructions() {
+	attroff(A_BOLD);
+	mvaddstr(0, 0, "move:  arrows or WASD");
+	mvaddstr(1, 0, "stop:  Q or die");
+	mvaddstr(2, 0, "pause: P");
+	mvaddstr(3, 0, "quit:  any key");
+	attron(A_BOLD);
+}
+
+void redraw(struct block *head, struct posn food, struct posn portal, int instructions_flag) {
 	struct block *b;
 
 	erase();
+
+	if (instructions_flag)
+		print_instructions();
 
 	do_color(COLOR_LEAD, 1);
 	mvaddch(head->p.y, head->p.x, CH_HEAD);

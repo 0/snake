@@ -196,13 +196,6 @@ int main(int argc, char **argv) {
 		init_pair(COLOR_PORTAL, COLOR_RED, bright_flag ? COLOR_RED : COLOR_BLACK);
 	}
 
-	if (instructions_flag) {
-		mvaddstr(0, 0, "move:  arrows or WASD");
-		mvaddstr(1, 0, "stop:  Q or die");
-		mvaddstr(2, 0, "pause: P");
-		mvaddstr(3, 0, "quit:  any key");
-	}
-
 	attron(A_BOLD);
 
 	frame_wait = fps_to_delay(fps_init);
@@ -216,7 +209,7 @@ int main(int argc, char **argv) {
 	extendSnake(&s, length_init, length_max);
 
 	placeFood(COLS, LINES, s, &food, &portal);
-	redraw(s.head, food, portal);
+	redraw(s.head, food, portal, instructions_flag);
 
 	s.dir = NORTH + rand() % 4;
 
@@ -285,10 +278,12 @@ int main(int argc, char **argv) {
 					break;
 				case KEY_PAUSE:
 					paused = !paused;
-					if (paused)
+					if (paused) {
+						print_instructions();
 						mvaddstr(s.head->p.y, s.head->p.x, "PAUSED");
-					else
-						redraw(s.head, food, portal);
+					} else {
+						redraw(s.head, food, portal, instructions_flag);
+					}
 
 					break;
 				case KEY_QUIT:
@@ -304,7 +299,7 @@ int main(int argc, char **argv) {
 						s.head->p.y = LINES - 1;
 
 					placeFood(COLS, LINES, s, &food, &portal);
-					redraw(s.head, food, portal);
+					redraw(s.head, food, portal, instructions_flag);
 					break;
 				default:
 					break;
@@ -327,7 +322,7 @@ int main(int argc, char **argv) {
 					s.dir = DEAD;
 					break;
 				case 3:
-					redraw(s.head, food, portal);
+					redraw(s.head, food, portal, instructions_flag);
 				default:
 					break;
 			}

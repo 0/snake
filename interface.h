@@ -24,7 +24,8 @@ enum item_color {
 };
 
 void do_color(enum item_color c, int on);
-void redraw(struct block *head, struct posn food, struct posn portal);
+void print_instructions();
+void redraw(struct block *head, struct posn food, struct posn portal, int instructions_flag);
 const char *generate_header();
 void show_usage(char *cmd);
 
