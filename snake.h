@@ -19,6 +19,7 @@ struct snake {
 };
 
 int collideWithSnake(struct block *head, int x, int y);
+int inSnakePath(struct snake s, int x, int y);
 unsigned int extendSnake(struct snake *s, unsigned int length, unsigned int length_max);
 void reverseSnake(struct snake *s);
 int isSnakeVertical(struct snake s);

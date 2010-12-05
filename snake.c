@@ -14,6 +14,14 @@ int collideWithSnake(struct block *head, int x, int y) {
 	return 0;
 }
 
+int inSnakePath(struct snake s, int x, int y) {
+	if (isSnakeVertical(s)) {
+		return (x == s.head->p.x);
+	} else {
+		return (y == s.head->p.y);
+	}
+}
+
 unsigned int extendSnake(struct snake *s, unsigned int length, unsigned int length_max) {
 	unsigned int max_increase = length_max - s->len;
 	unsigned int increase = length < max_increase ? length : max_increase;
