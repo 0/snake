@@ -92,20 +92,22 @@ void show_usage(char *cmd) {
 "        Enable color. Default on.\n"
 "    --instructions\n"
 "        Show instructions. Default off.\n"
-"    --fps-display\n"
+"    --dfps-display\n"
 "        Show current framerate. Default off.\n");
 
 	printf(
 "  Gameplay\n"
-"    --fps-init <num>\n"
+"    --acceleration <num>\n"
+"        Rate of framerate increase (integer). Default: %d\n"
+"    --dfps-init <num>\n"
 "        Initial framerate (integer). Default: %d\n"
-"    --fps-max <num>\n"
+"    --dfps-max <num>\n"
 "        Maximum framerate (integer). Default: %d\n"
 "    --length-init <num>\n"
 "        Initial snake length (integer). Default: 0\n"
 "    --length-max <num>\n"
 "        Maximum snake length (integer). Default: %d\n",
-		FPS_INIT, FPS_MAX, LENGTH_MAX);
+		ACCEL_DEFAULT, DFPS_INIT, DFPS_MAX, LENGTH_MAX);
 
 	printf(
 "  Miscellaneous\n"
@@ -116,7 +118,9 @@ void show_usage(char *cmd) {
 
 	printf(
 "\n"
-"Framerates must be between %d and %d, inclusive.\n"
-"Lengths must be between 0 and %d, inclusive.\n",
-		FPS_MIN, FPS_MAX, LENGTH_MAX);
+"VALUES:\n"
+"  Acceleration: %d to %d (dfps/turn)\n"
+"  Framerate: %d to %d (dfps)\n"
+"  Length: 0 to %d\n",
+		ACCEL_MIN, ACCEL_MAX, DFPS_MIN, DFPS_MAX, LENGTH_MAX);
 }

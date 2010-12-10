@@ -13,28 +13,11 @@
 #include "snake.h"
 #include "things.h"
 
-#define H_COEF 2
-#define V_COEF 3
-
 int use_color = 0;
 
 volatile int bailing = 0;
 
-unsigned int delay_to_fps(unsigned int delay) {
-	if (delay > 0)
-		return 2 * (1000 * 1000) / (delay * (H_COEF + V_COEF));
-	else
-		return -1;
-}
-
-unsigned int fps_to_delay(unsigned int fps) {
-	if (fps > 0)
-		return 2 * (1000 * 1000) / (fps * (H_COEF + V_COEF));
-	else
-		return -1;
-}
-
-void cleanup(struct snake s, time_t time_start, time_t time_stop, unsigned int frame_wait, enum cod cause_of_death, int proper_exit) {
+void cleanup(struct snake s, time_t time_start, time_t time_stop, unsigned int dfps, enum cod cause_of_death, int proper_exit) {
 	double time_total;
 	struct block *b;
 
@@ -57,7 +40,7 @@ void cleanup(struct snake s, time_t time_start, time_t time_stop, unsigned int f
 	} else {
 		const char *cause = stringCOD(cause_of_death);
 		printf("%s with %d segments in %.0f seconds on %d lines and %d columns at %d frames per second\n",
-			cause, s.len, time_total, LINES, COLS, delay_to_fps(frame_wait));
+			cause, s.len, time_total, LINES, COLS, dfps / 10);
 	}
 }
 
@@ -69,23 +52,26 @@ int main(int argc, char **argv) {
 	static int color_flag = 1;
 	static int bright_flag = 0;
 	static int instructions_flag = 0;
-	static int fps_display_flag = 0;
+	static int dfps_display_flag = 0;
 
-	int fps_init = FPS_INIT;
-	int fps_max = FPS_MAX;
+	unsigned int dfps_init = DFPS_INIT;
+	unsigned int dfps_max = DFPS_MAX;
+	unsigned int acceleration = ACCEL_DEFAULT;
+
 	unsigned int length_init = 0;
 
 	struct option longopts[] = {
+		{"acceleration", required_argument, 0, 'a'},
 		{"bright", no_argument, &bright_flag, 1},
 		{"no-bright", no_argument, &bright_flag, 0},
 		{"color", no_argument, &color_flag, 1},
 		{"no-color", no_argument, &color_flag, 0},
 		{"instructions", no_argument, &instructions_flag, 1},
 		{"no-instructions", no_argument, &instructions_flag, 0},
-		{"fps-display", no_argument, &fps_display_flag, 1},
-		{"no-fps-display", no_argument, &fps_display_flag, 0},
-		{"fps-init", required_argument, 0, 'i'},
-		{"fps-max", required_argument, 0, 'm'},
+		{"dfps-display", no_argument, &dfps_display_flag, 1},
+		{"no-dfps-display", no_argument, &dfps_display_flag, 0},
+		{"dfps-init", required_argument, 0, 'i'},
+		{"dfps-max", required_argument, 0, 'm'},
 		{"length-init", required_argument, 0, 'j'},
 		{"length-max", required_argument, 0, 'n'},
 		{"help", no_argument, 0, 'h'},
@@ -95,7 +81,7 @@ int main(int argc, char **argv) {
 	int opterr_flag = 0;
 	int c = 0;
 
-	char fps_display_buf[FPS_MAX_CHARS + 1];
+	char dfps_display_buf[DFPS_MAX_CHARS + 1];
 
 	int cursor_visible = 0;
 
@@ -104,8 +90,7 @@ int main(int argc, char **argv) {
 	struct posn food = {-1, -1};
 	struct posn portal;
 
-	unsigned int frame_wait;
-	unsigned int frame_min;
+	unsigned int dfps_cur;
 
 	enum cod cause_of_death = DEATH_UNKNOWN;
 
@@ -122,38 +107,56 @@ int main(int argc, char **argv) {
 
 	while (c != -1) {
 		char *p;
+		long n;
 		c = getopt_long(argc, argv, "", longopts, NULL);
 
 		switch (c) {
 			case 'h':
 				show_usage(argv[0]);
 				return 0;
-			case 'i':
-				fps_init = strtol(optarg, &p, 10);
-				if (errno || *p || fps_init < FPS_MIN || fps_init > FPS_MAX) {
-					fprintf(stderr, "Invalid value for fps-init: %d (%s)\n", fps_init, optarg);
+			case 'a':
+				n = strtol(optarg, &p, 10);
+				if (errno || *p || n < ACCEL_MIN || n > ACCEL_MAX) {
+					fprintf(stderr, "Invalid value for acceleration: %s\n", optarg);
 					opterr_flag = 1;
+				} else {
+					acceleration = n;
+				}
+				break;
+			case 'i':
+				n = strtol(optarg, &p, 10);
+				if (errno || *p || n < DFPS_MIN || n > DFPS_MAX) {
+					fprintf(stderr, "Invalid value for fps-init: %s\n", optarg);
+					opterr_flag = 1;
+				} else {
+					dfps_init = n;
 				}
 				break;
 			case 'm':
-				fps_max = strtol(optarg, &p, 10);
-				if (errno || *p || fps_max < FPS_MIN || fps_max > FPS_MAX) {
-					fprintf(stderr, "Invalid value for fps-max: %d (%s)\n", fps_max, optarg);
+				n = strtol(optarg, &p, 10);
+				if (errno || *p || n < DFPS_MIN || n > DFPS_MAX) {
+					fprintf(stderr, "Invalid value for fps-max: %s\n", optarg);
 					opterr_flag = 1;
+				} else {
+					dfps_max = n;
 				}
 				break;
 			case 'j':
-				length_init = strtol(optarg, &p, 10);
-				if (errno || *p || length_init > LENGTH_MAX) {
-					fprintf(stderr, "Invalid value for length-init: %u (%s)\n", length_init, optarg);
+				n = strtol(optarg, &p, 10);
+				if (errno || *p || n < 0 || n > LENGTH_MAX) {
+					fprintf(stderr, "Invalid value for length-init: %s\n", optarg);
 					opterr_flag = 1;
+				} else {
+					length_init = n;
 				}
 				break;
 			case 'n':
-				length_max = strtol(optarg, &p, 10);
-				if (errno || *p || length_max > LENGTH_MAX) {
-					fprintf(stderr, "Invalid value for length-max: %u (%s)\n", length_max, optarg);
+				n = strtol(optarg, &p, 10);
+				if (errno || *p || n < 0 || n > LENGTH_MAX) {
+					fprintf(stderr, "Invalid value for length-max: %s\n", optarg);
 					opterr_flag = 1;
+				} else {
+					length_max = n;
 				}
 				break;
 			case '?':
@@ -162,7 +165,7 @@ int main(int argc, char **argv) {
 		}
 	}
 
-	if (fps_init > fps_max) {
+	if (dfps_init > dfps_max) {
 		fprintf(stderr, "Initial framerate cannot be higher than the maximum.\n");
 		opterr_flag = 1;
 	}
@@ -198,8 +201,7 @@ int main(int argc, char **argv) {
 
 	attron(A_BOLD);
 
-	frame_wait = fps_to_delay(fps_init);
-	frame_min = fps_to_delay(fps_max);
+	dfps_cur = dfps_init;
 
 	s.head = s.tail = fetchBlock();
 
@@ -226,7 +228,7 @@ int main(int argc, char **argv) {
 		gettimeofday(&now, NULL);
 
 		if (timercmp(&now, &next_frame, >)) {
-			sleep_time = frame_wait * (isSnakeVertical(s) ? V_COEF : H_COEF);
+			sleep_time = dfps_to_delay(dfps_cur) * (isSnakeVertical(s) ? V_COEF : H_COEF);
 
 			until_next.tv_sec = sleep_time / (1000 * 1000);
 			until_next.tv_usec = sleep_time % (1000 * 1000);
@@ -247,7 +249,7 @@ int main(int argc, char **argv) {
 						rev = 1;
 					}
 					s.dir = NORTH;
-					frame_wait = speedUp(frame_wait, frame_min);
+					dfps_cur = speedUp(dfps_cur, dfps_max, acceleration);
 					break;
 				case KEY_RIGHT:
 				case KEY_RIGHT_ALT:
@@ -256,7 +258,7 @@ int main(int argc, char **argv) {
 						rev = 1;
 					}
 					s.dir = EAST;
-					frame_wait = speedUp(frame_wait, frame_min);
+					dfps_cur = speedUp(dfps_cur, dfps_max, acceleration);
 					break;
 				case KEY_DOWN:
 				case KEY_DOWN_ALT:
@@ -265,7 +267,7 @@ int main(int argc, char **argv) {
 						rev = 1;
 					}
 					s.dir = SOUTH;
-					frame_wait = speedUp(frame_wait, frame_min);
+					dfps_cur = speedUp(dfps_cur, dfps_max, acceleration);
 					break;
 				case KEY_LEFT:
 				case KEY_LEFT_ALT:
@@ -274,7 +276,7 @@ int main(int argc, char **argv) {
 						rev = 1;
 					}
 					s.dir = WEST;
-					frame_wait = speedUp(frame_wait, frame_min);
+					dfps_cur = speedUp(dfps_cur, dfps_max, acceleration);
 					break;
 				case KEY_PAUSE:
 					paused = !paused;
@@ -289,7 +291,7 @@ int main(int argc, char **argv) {
 				case KEY_QUIT:
 					cause_of_death = DEATH_QUIT;
 
-					cleanup(s, time_start, time_stop, frame_wait, cause_of_death, 0);
+					cleanup(s, time_start, time_stop, dfps_cur, cause_of_death, 0);
 					return 0;
 				case KEY_RESIZE:
 					if (s.head->p.x > COLS)
@@ -340,13 +342,13 @@ int main(int argc, char **argv) {
 			}
 		}
 
-		if (fps_display_flag) {
-			sprintf(fps_display_buf, "%d", delay_to_fps(frame_wait));
-			mvaddstr(LINES - 1, 0, fps_display_buf);
+		if (dfps_display_flag) {
+			sprintf(dfps_display_buf, "%d", dfps_cur);
+			mvaddstr(LINES - 1, 0, dfps_display_buf);
 		}
 
 		if (bailing) {
-			cleanup(s, time_start, time_stop, frame_wait, cause_of_death, 0);
+			cleanup(s, time_start, time_stop, dfps_cur, cause_of_death, 0);
 			return 1;
 		}
 
@@ -362,6 +364,6 @@ int main(int argc, char **argv) {
 	nodelay(stdscr, FALSE);
 	getch();
 
-	cleanup(s, time_start, time_stop, frame_wait, cause_of_death, 1);
+	cleanup(s, time_start, time_stop, dfps_cur, cause_of_death, 1);
 	return 0;
 }

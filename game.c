@@ -2,6 +2,7 @@
 #include <sys/time.h>
 
 #include "game.h"
+#include "interface.h"
 
 const char *stringCOD(enum cod cause) {
 	switch (cause) {
@@ -84,12 +85,13 @@ int moveSnake(int cols, int lines, struct snake *s, struct posn *food, struct po
 	return 0;
 }
 
-unsigned int speedUp(unsigned int frame_wait, unsigned int frame_min) {
-	if (frame_wait >= FRAME_DIFF) {
-		frame_wait -= FRAME_DIFF;
-		if (frame_wait < frame_min)
-			frame_wait = frame_min;
-	}
+unsigned int dfps_to_delay(unsigned int dfps) {
+	if (dfps > 0)
+		return 10 * 2 * (1000 * 1000) / (dfps * (H_COEF + V_COEF));
+	else
+		return -1;
+}
 
-	return frame_wait;
+unsigned int speedUp(unsigned int dfps, unsigned int dfps_max, unsigned int dfps_diff) {
+	return (dfps_diff > dfps_max || dfps > dfps_max - dfps_diff) ? dfps_max : dfps + dfps_diff;
 }

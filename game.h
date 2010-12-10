@@ -9,14 +9,17 @@
 
 #define LENGTH_MAX (10 * 1000)
 
-#define FPS_MIN       1
-#define FPS_MAX       1000
-#define FPS_MAX_CHARS 4
-#define FPS_INIT      80
+#define DFPS_MIN  10
+#define DFPS_MAX  10000
+#define DFPS_INIT 800
+
+#define DFPS_MAX_CHARS 5
+
+#define ACCEL_MIN     0
+#define ACCEL_DEFAULT 5
+#define ACCEL_MAX     500
 
 #define SLEEP_MAX (10 * 1000)
-
-#define FRAME_DIFF    5
 
 enum cod {
 	DEATH_UNKNOWN,
@@ -29,6 +32,7 @@ enum cod {
 const char *stringCOD(enum cod cause);
 void placeFood(int cols, int lines, struct snake s, struct posn *food, struct posn *portal);
 int moveSnake(int cols, int lines, struct snake *s, struct posn *food, struct posn *portal, unsigned int length_max);
-unsigned int speedUp(unsigned int frame_wait, unsigned int frame_min);
+unsigned int dfps_to_delay(unsigned int dfps);
+unsigned int speedUp(unsigned int dfps, unsigned int dfps_max, unsigned int dfps_diff);
 
 #endif /* __GAME_H */

@@ -14,6 +14,9 @@
 #define KEY_PAUSE     'p'
 #define KEY_QUIT      'q'
 
+#define H_COEF 2
+#define V_COEF 3
+
 #include "things.h"
 
 enum item_color {
