@@ -217,6 +217,8 @@ int main(int argc, char **argv) {
 
 	time_start = time_stop = time(NULL);
 
+	enum direction next_dir = NO_DIR;
+
 	while (s.dir != DEAD) {
 		struct timeval until_next;
 		unsigned int sleep_time;
@@ -244,39 +246,19 @@ int main(int argc, char **argv) {
 			switch (c) {
 				case KEY_UP:
 				case KEY_UP_ALT:
-					if (SOUTH == s.dir) {
-						reverseSnake(&s);
-						rev = 1;
-					}
-					s.dir = NORTH;
-					dfps_cur = speedUp(dfps_cur, dfps_max, acceleration);
+					next_dir = NORTH;
 					break;
 				case KEY_RIGHT:
 				case KEY_RIGHT_ALT:
-					if (WEST == s.dir) {
-						reverseSnake(&s);
-						rev = 1;
-					}
-					s.dir = EAST;
-					dfps_cur = speedUp(dfps_cur, dfps_max, acceleration);
+					next_dir = EAST;
 					break;
 				case KEY_DOWN:
 				case KEY_DOWN_ALT:
-					if (NORTH == s.dir) {
-						reverseSnake(&s);
-						rev = 1;
-					}
-					s.dir = SOUTH;
-					dfps_cur = speedUp(dfps_cur, dfps_max, acceleration);
+					next_dir = SOUTH;
 					break;
 				case KEY_LEFT:
 				case KEY_LEFT_ALT:
-					if (EAST == s.dir) {
-						reverseSnake(&s);
-						rev = 1;
-					}
-					s.dir = WEST;
-					dfps_cur = speedUp(dfps_cur, dfps_max, acceleration);
+					next_dir = WEST;
 					break;
 				case KEY_PAUSE:
 					paused = !paused;
@@ -309,6 +291,17 @@ int main(int argc, char **argv) {
 		}
 
 		if (!paused && update) {
+			if (next_dir != NO_DIR && s.dir != next_dir) {
+				if (isDirOpposite(s.dir, next_dir)) {
+					reverseSnake(&s);
+					rev = 1;
+				}
+
+				dfps_cur = speedUp(dfps_cur, dfps_max, acceleration);
+				s.dir = next_dir;
+				next_dir = NO_DIR;
+			}
+
 			mvaddch(s.tail->p.y, s.tail->p.x, CH_VOID);
 
 			switch (moveSnake(COLS, LINES, &s, &food, &portal, length_max)) {

@@ -4,6 +4,7 @@
 #include "things.h"
 
 enum direction {
+	NO_DIR,
 	DEAD,
 	NORTH,
 	EAST,
@@ -18,6 +19,7 @@ struct snake {
 	enum direction dir;
 };
 
+int isDirOpposite(enum direction a, enum direction b);
 int collideWithSnake(struct block *head, struct posn p);
 int inSnakePath(struct snake s, struct posn p);
 unsigned int extendSnake(struct snake *s, unsigned int length, unsigned int length_max);

@@ -3,6 +3,10 @@
 #include "snake.h"
 #include "things.h"
 
+int isDirOpposite(enum direction a, enum direction b) {
+	return a != b && (a - NORTH) % 2 == (b - NORTH) % 2;
+}
+
 int collideWithSnake(struct block *head, struct posn p) {
 	while (head) {
 		if (head->p.x == p.x && head->p.y == p.y)
