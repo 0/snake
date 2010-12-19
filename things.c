@@ -14,3 +14,10 @@ struct block *fetch_block() {
 
 	return ret;
 }
+
+int collide_with_wall(struct map m, struct posn p, char wall) {
+	if (p.x < 0 || (unsigned int)p.x >= m.width || p.y < 0 || (unsigned int)p.y >= m.height)
+		return 0;
+
+	return wall == m.tiles[p.y][p.x];
+}

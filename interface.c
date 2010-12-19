@@ -26,13 +26,23 @@ void print_instructions() {
 	attron(A_BOLD);
 }
 
-void redraw(struct block *head, struct posn food, struct posn portal, int instructions_flag) {
+void redraw(struct block *head, struct map m, struct posn food, struct posn portal, int instructions_flag) {
+	unsigned int i, j;
 	struct block *b;
 
 	erase();
 
 	if (instructions_flag)
 		print_instructions();
+
+	do_color(COLOR_WALL, 1);
+	for (i = 0; i < m.height; i++) {
+		for (j = 0; j < m.width; j++) {
+			if (CH_WALL == m.tiles[i][j])
+				mvaddch(i, j, CH_WALL);
+		}
+	}
+	do_color(COLOR_WALL, 0);
 
 	do_color(COLOR_HEAD, 1);
 	mvaddch(head->p.y, head->p.x, CH_HEAD);
@@ -107,7 +117,9 @@ void show_usage(char *cmd) {
 "    --length-init <num>\n"
 "        Initial snake length (integer). Default: 0\n"
 "    --length-max <num>\n"
-"        Maximum snake length (integer). Default: %d\n",
+"        Maximum snake length (integer). Default: %d\n"
+"    --outside-wall\n"
+"        Put up a perimeter wall. Default off.\n",
 		ACCEL_DEFAULT, DFPS_INIT, DFPS_MAX, LENGTH_MAX);
 
 	printf(

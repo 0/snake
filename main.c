@@ -49,10 +49,11 @@ void bail(int sig) {
 }
 
 int main(int argc, char **argv) {
-	static int color_flag = 1;
 	static int bright_flag = 0;
+	static int color_flag = 1;
 	static int instructions_flag = 0;
 	static int dfps_display_flag = 0;
+	static int outside_wall_flag = 0;
 
 	unsigned int dfps_init = DFPS_INIT;
 	unsigned int dfps_max = DFPS_MAX;
@@ -74,6 +75,8 @@ int main(int argc, char **argv) {
 		{"dfps-max", required_argument, 0, 'm'},
 		{"length-init", required_argument, 0, 'j'},
 		{"length-max", required_argument, 0, 'n'},
+		{"outside-wall", no_argument, &outside_wall_flag, 1},
+		{"no-outside-wall", no_argument, &outside_wall_flag, 0},
 		{"help", no_argument, 0, 'h'},
 		{0, 0, 0, 0}
 	};
@@ -81,6 +84,8 @@ int main(int argc, char **argv) {
 	int opterr_flag = 0;
 	int show_help = 0;
 	int c = 0;
+
+	unsigned int i, j;
 
 	char dfps_display_buf[DFPS_MAX_CHARS + 1];
 
@@ -90,6 +95,8 @@ int main(int argc, char **argv) {
 
 	struct posn food = {-1, -1};
 	struct posn portal;
+
+	struct map m;
 
 	unsigned int dfps_cur;
 
@@ -174,11 +181,26 @@ int main(int argc, char **argv) {
 		init_pair(COLOR_BODY, COLOR_CYAN, bright_flag ? COLOR_CYAN : COLOR_BLACK);
 		init_pair(COLOR_FOOD, COLOR_GREEN, bright_flag ? COLOR_GREEN : COLOR_BLACK);
 		init_pair(COLOR_PORTAL, COLOR_RED, bright_flag ? COLOR_RED : COLOR_BLACK);
+		init_pair(COLOR_WALL, COLOR_YELLOW, bright_flag ? COLOR_YELLOW : COLOR_BLACK);
 	}
 
 	attron(A_BOLD);
 
 	dfps_cur = dfps_init;
+
+	m.width = COLS;
+	m.height = LINES;
+	m.tiles = calloc(LINES, sizeof(*m.tiles));
+
+	for (i = 0; i < m.height; i++) {
+		m.tiles[i] = calloc(COLS, sizeof(**m.tiles));
+		for (j = 0; j < m.width; j++) {
+			if (outside_wall_flag && (i == 0 || i == m.height - 1 || j == 0 || j == m.width - 1))
+				m.tiles[i][j] = CH_WALL;
+			else
+				m.tiles[i][j] = CH_VOID;
+		}
+	}
 
 	s.head = s.tail = fetch_block();
 
@@ -187,8 +209,8 @@ int main(int argc, char **argv) {
 
 	extend_snake(&s, length_init, length_max);
 
-	place_food(COLS, LINES, s, &food, &portal);
-	redraw(s.head, food, portal, instructions_flag);
+	place_food(COLS, LINES, s, m, &food, &portal);
+	redraw(s.head, m, food, portal, instructions_flag);
 
 	s.dir = NORTH + rand() % 4;
 
@@ -246,7 +268,7 @@ int main(int argc, char **argv) {
 						print_instructions();
 						mvaddstr(s.head->p.y, s.head->p.x, "PAUSED");
 					} else {
-						redraw(s.head, food, portal, instructions_flag);
+						redraw(s.head, m, food, portal, instructions_flag);
 					}
 
 					break;
@@ -262,8 +284,8 @@ int main(int argc, char **argv) {
 					if (s.head->p.y > LINES)
 						s.head->p.y = LINES - 1;
 
-					place_food(COLS, LINES, s, &food, &portal);
-					redraw(s.head, food, portal, instructions_flag);
+					place_food(COLS, LINES, s, m, &food, &portal);
+					redraw(s.head, m, food, portal, instructions_flag);
 					break;
 				default:
 					break;
@@ -284,7 +306,7 @@ int main(int argc, char **argv) {
 
 			mvaddch(s.tail->p.y, s.tail->p.x, CH_VOID);
 
-			switch (move_snake(COLS, LINES, &s, &food, &portal, length_max)) {
+			switch (move_snake(COLS, LINES, &s, m, &food, &portal, length_max)) {
 				case 1:
 					if (rev)
 						cause_of_death = DEATH_REVERSE;
@@ -297,7 +319,12 @@ int main(int argc, char **argv) {
 					s.dir = DEAD;
 					break;
 				case 3:
-					redraw(s.head, food, portal, instructions_flag);
+					redraw(s.head, m, food, portal, instructions_flag);
+					break;
+				case 4:
+					cause_of_death = DEATH_WALL;
+					s.dir = DEAD;
+					break;
 				default:
 					break;
 			}

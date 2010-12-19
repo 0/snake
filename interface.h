@@ -5,6 +5,7 @@
 #define CH_BODY   '#'
 #define CH_FOOD   '*'
 #define CH_PORTAL '^'
+#define CH_WALL   '#'
 #define CH_VOID   ' '
 
 #define KEY_LEFT_ALT  'h'
@@ -24,11 +25,12 @@ enum item_color {
 	COLOR_BODY,
 	COLOR_FOOD,
 	COLOR_PORTAL,
+	COLOR_WALL,
 };
 
 void do_color(enum item_color c, int on);
 void print_instructions();
-void redraw(struct block *head, struct posn food, struct posn portal, int instructions_flag);
+void redraw(struct block *head, struct map m, struct posn food, struct posn portal, int instructions_flag);
 const char *generate_header();
 void show_usage(char *cmd);
 int parse_uint_arg(unsigned int *target, char *arg_name, char *arg_value, int min_bound, int max_bound, int *opterr_flag);

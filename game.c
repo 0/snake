@@ -14,24 +14,26 @@ const char *string_COD(enum cod cause) {
 			return "crashed into a portal";
 		case DEATH_QUIT:
 			return "quit";
+		case DEATH_WALL:
+			return "plowed into a wall";
 		default:
 			return "died mysteriously";
 	}
 }
 
-void place_food(int cols, int lines, struct snake s, struct posn *food, struct posn *portal) {
+void place_food(int cols, int lines, struct snake s, struct map m, struct posn *food, struct posn *portal) {
 	do {
 		food->x = rand() % cols;
 		food->y = rand() % lines;
-	} while (collide_with_snake(s.head, *food) || in_snake_path(s, *food));
+	} while (collide_with_snake(s.head, *food) || collide_with_wall(m, *food, CH_WALL) || in_snake_path(s, *food));
 
 	do {
 		portal->x = rand() % cols;
 		portal->y = rand() % lines;
-	} while (collide_with_snake(s.head, *portal) || in_snake_path(s, *portal) || food->x == portal->x || food->y == portal->y);
+	} while (collide_with_snake(s.head, *portal) || collide_with_wall(m, *portal, CH_WALL) || in_snake_path(s, *portal) || food->x == portal->x || food->y == portal->y);
 }
 
-int move_snake(int cols, int lines, struct snake *s, struct posn *food, struct posn *portal, unsigned int length_max) {
+int move_snake(int cols, int lines, struct snake *s, struct map m, struct posn *food, struct posn *portal, unsigned int length_max) {
 	struct block *b;
 
 	b = s->tail;
@@ -77,10 +79,13 @@ int move_snake(int cols, int lines, struct snake *s, struct posn *food, struct p
 		s->head->p.x = portal->x;
 		s->head->p.y = portal->y;
 
-		place_food(cols, lines, *s, food, portal);
+		place_food(cols, lines, *s, m, food, portal);
 
 		return 3;
 	}
+
+	if (collide_with_wall(m, s->head->p, CH_WALL))
+		return 4;
 
 	return 0;
 }
