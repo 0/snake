@@ -198,7 +198,6 @@ int main(int argc, char **argv) {
 
 	while (s.dir != DEAD) {
 		struct timeval until_next;
-		unsigned int sleep_time;
 
 		int update = 0;
 		int rev = 0;
@@ -207,7 +206,7 @@ int main(int argc, char **argv) {
 		gettimeofday(&now, NULL);
 
 		if (timercmp(&now, &next_frame, >)) {
-			sleep_time = dfps_to_delay(dfps_cur) * (is_snake_vertical(s) ? V_COEF : H_COEF);
+			unsigned int sleep_time = dfps_to_delay(dfps_cur) * (is_snake_vertical(s) ? V_COEF : H_COEF);
 
 			until_next.tv_sec = sleep_time / (1000 * 1000);
 			until_next.tv_usec = sleep_time % (1000 * 1000);
@@ -216,7 +215,11 @@ int main(int argc, char **argv) {
 			update = 1;
 		} else {
 			timersub(&next_frame, &now, &until_next);
-			sleep_time = until_next.tv_sec * (1000 * 1000) + until_next.tv_usec;
+		}
+
+		if (until_next.tv_sec > 0 || until_next.tv_usec > SLEEP_MAX) {
+			until_next.tv_sec = 0;
+			until_next.tv_usec = SLEEP_MAX;
 		}
 
 		while (ERR != (c = getch())) {
@@ -325,7 +328,24 @@ int main(int argc, char **argv) {
 		if (cursor_visible)
 			move(0, 0);
 
-		usleep(sleep_time > SLEEP_MAX ? SLEEP_MAX : sleep_time);
+		{
+			struct timespec sleep_rq, sleep_rm;
+
+			sleep_rq.tv_sec = until_next.tv_sec;
+			sleep_rq.tv_nsec = until_next.tv_usec * 1000;
+
+			errno = 0;
+			while (-1 == nanosleep(&sleep_rq, &sleep_rm)) {
+				if (EINTR == errno) {
+					sleep_rq.tv_sec = sleep_rm.tv_sec;
+					sleep_rq.tv_nsec = sleep_rm.tv_nsec;
+				} else {
+					cleanup(s, time_start, time_stop, dfps_cur, cause_of_death, 0);
+					fprintf(stderr, "Can't sleep: %d; %s", errno, strerror(errno));
+					return 1;
+				}
+			}
+		}
 	}
 
 	time_stop = time(NULL);
