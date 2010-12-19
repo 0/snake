@@ -30,9 +30,17 @@ enum cod {
 	DEATH_WALL,
 };
 
+enum move_snake_result {
+	MOVED_SNAKE_BORING,
+	MOVED_SNAKE_SELF,
+	MOVED_SNAKE_PORTAL,
+	MOVED_SNAKE_FOOD,
+	MOVED_SNAKE_WALL,
+};
+
 const char *string_COD(enum cod cause);
 void place_food(int cols, int lines, struct snake s, struct map m, struct posn *food, struct posn *portal);
-int move_snake(int cols, int lines, struct snake *s, struct map m, struct posn *food, struct posn *portal, unsigned int length_max);
+enum move_snake_result move_snake(int cols, int lines, struct snake *s, struct map m, struct posn *food, struct posn *portal, unsigned int length_max);
 unsigned int dfps_to_delay(unsigned int dfps);
 unsigned int speed_up(unsigned int dfps, unsigned int dfps_max, unsigned int dfps_diff);
 

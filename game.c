@@ -33,7 +33,7 @@ void place_food(int cols, int lines, struct snake s, struct map m, struct posn *
 	} while (collide_with_snake(s.head, *portal) || collide_with_wall(m, *portal, CH_WALL) || in_snake_path(s, *portal) || food->x == portal->x || food->y == portal->y);
 }
 
-int move_snake(int cols, int lines, struct snake *s, struct map m, struct posn *food, struct posn *portal, unsigned int length_max) {
+enum move_snake_result move_snake(int cols, int lines, struct snake *s, struct map m, struct posn *food, struct posn *portal, unsigned int length_max) {
 	struct block *b;
 
 	b = s->tail;
@@ -69,10 +69,10 @@ int move_snake(int cols, int lines, struct snake *s, struct map m, struct posn *
 	}
 
 	if (collide_with_snake(s->head->next, s->head->p))
-		return 1;
+		return MOVED_SNAKE_SELF;
 
 	if (s->head->p.x == portal->x && s->head->p.y == portal->y)
-		return 2;
+		return MOVED_SNAKE_PORTAL;
 
 	if (s->head->p.x == food->x && s->head->p.y == food->y) {
 		extend_snake(s, rand() % (GROWTH_MAX - GROWTH_MIN) + GROWTH_MIN, length_max);
@@ -81,13 +81,13 @@ int move_snake(int cols, int lines, struct snake *s, struct map m, struct posn *
 
 		place_food(cols, lines, *s, m, food, portal);
 
-		return 3;
+		return MOVED_SNAKE_FOOD;
 	}
 
 	if (collide_with_wall(m, s->head->p, CH_WALL))
-		return 4;
+		return MOVED_SNAKE_WALL;
 
-	return 0;
+	return MOVED_SNAKE_BORING;
 }
 
 unsigned int dfps_to_delay(unsigned int dfps) {

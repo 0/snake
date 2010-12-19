@@ -307,21 +307,21 @@ int main(int argc, char **argv) {
 			mvaddch(s.tail->p.y, s.tail->p.x, CH_VOID);
 
 			switch (move_snake(COLS, LINES, &s, m, &food, &portal, length_max)) {
-				case 1:
+				case MOVED_SNAKE_SELF:
 					if (rev)
 						cause_of_death = DEATH_REVERSE;
 					else
 						cause_of_death = DEATH_SELF;
 					s.dir = DEAD;
 					break;
-				case 2:
+				case MOVED_SNAKE_PORTAL:
 					cause_of_death = DEATH_PORTAL;
 					s.dir = DEAD;
 					break;
-				case 3:
+				case MOVED_SNAKE_FOOD:
 					redraw(s.head, m, food, portal, instructions_flag);
 					break;
-				case 4:
+				case MOVED_SNAKE_WALL:
 					cause_of_death = DEATH_WALL;
 					s.dir = DEAD;
 					break;
