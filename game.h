@@ -26,13 +26,13 @@ enum cod {
 	DEATH_SELF,
 	DEATH_REVERSE,
 	DEATH_PORTAL,
-	DEATH_QUIT
+	DEATH_QUIT,
 };
 
-const char *stringCOD(enum cod cause);
-void placeFood(int cols, int lines, struct snake s, struct posn *food, struct posn *portal);
-int moveSnake(int cols, int lines, struct snake *s, struct posn *food, struct posn *portal, unsigned int length_max);
+const char *string_COD(enum cod cause);
+void place_food(int cols, int lines, struct snake s, struct posn *food, struct posn *portal);
+int move_snake(int cols, int lines, struct snake *s, struct posn *food, struct posn *portal, unsigned int length_max);
 unsigned int dfps_to_delay(unsigned int dfps);
-unsigned int speedUp(unsigned int dfps, unsigned int dfps_max, unsigned int dfps_diff);
+unsigned int speed_up(unsigned int dfps, unsigned int dfps_max, unsigned int dfps_diff);
 
 #endif /* __GAME_H */

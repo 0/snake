@@ -33,17 +33,17 @@ void redraw(struct block *head, struct posn food, struct posn portal, int instru
 	if (instructions_flag)
 		print_instructions();
 
-	do_color(COLOR_LEAD, 1);
+	do_color(COLOR_HEAD, 1);
 	mvaddch(head->p.y, head->p.x, CH_HEAD);
-	do_color(COLOR_LEAD, 0);
+	do_color(COLOR_HEAD, 0);
 
 	b = head->next;
-	do_color(COLOR_BLOCK, 1);
+	do_color(COLOR_BODY, 1);
 	while (b) {
 		mvaddch(b->p.y, b->p.x, CH_BODY);
 		b = b->next;
 	}
-	do_color(COLOR_BLOCK, 0);
+	do_color(COLOR_BODY, 0);
 
 	do_color(COLOR_FOOD, 1);
 	mvaddch(food.y, food.x, CH_FOOD);

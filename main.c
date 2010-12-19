@@ -38,7 +38,7 @@ void cleanup(struct snake s, time_t time_start, time_t time_stop, unsigned int d
 	if (time_total <= 0 || LINES <= 0 || COLS <= 0) {
 		printf("You didn't even play!\n");
 	} else {
-		const char *cause = stringCOD(cause_of_death);
+		const char *cause = string_COD(cause_of_death);
 		printf("%s with %d segments in %.0f seconds on %d lines and %d columns at %d frames per second\n",
 			cause, s.len, time_total, LINES, COLS, dfps / 10);
 	}
@@ -193,8 +193,8 @@ int main(int argc, char **argv) {
 	if (color_flag && has_colors()) {
 		use_color = 1;
 		start_color();
-		init_pair(COLOR_LEAD, COLOR_BLUE, bright_flag ? COLOR_BLUE : COLOR_BLACK);
-		init_pair(COLOR_BLOCK, COLOR_CYAN, bright_flag ? COLOR_CYAN : COLOR_BLACK);
+		init_pair(COLOR_HEAD, COLOR_BLUE, bright_flag ? COLOR_BLUE : COLOR_BLACK);
+		init_pair(COLOR_BODY, COLOR_CYAN, bright_flag ? COLOR_CYAN : COLOR_BLACK);
 		init_pair(COLOR_FOOD, COLOR_GREEN, bright_flag ? COLOR_GREEN : COLOR_BLACK);
 		init_pair(COLOR_PORTAL, COLOR_RED, bright_flag ? COLOR_RED : COLOR_BLACK);
 	}
@@ -203,14 +203,14 @@ int main(int argc, char **argv) {
 
 	dfps_cur = dfps_init;
 
-	s.head = s.tail = fetchBlock();
+	s.head = s.tail = fetch_block();
 
 	s.head->p.x = COLS / 2;
 	s.head->p.y = LINES / 2;
 
-	extendSnake(&s, length_init, length_max);
+	extend_snake(&s, length_init, length_max);
 
-	placeFood(COLS, LINES, s, &food, &portal);
+	place_food(COLS, LINES, s, &food, &portal);
 	redraw(s.head, food, portal, instructions_flag);
 
 	s.dir = NORTH + rand() % 4;
@@ -230,7 +230,7 @@ int main(int argc, char **argv) {
 		gettimeofday(&now, NULL);
 
 		if (timercmp(&now, &next_frame, >)) {
-			sleep_time = dfps_to_delay(dfps_cur) * (isSnakeVertical(s) ? V_COEF : H_COEF);
+			sleep_time = dfps_to_delay(dfps_cur) * (is_snake_vertical(s) ? V_COEF : H_COEF);
 
 			until_next.tv_sec = sleep_time / (1000 * 1000);
 			until_next.tv_usec = sleep_time % (1000 * 1000);
@@ -282,7 +282,7 @@ int main(int argc, char **argv) {
 					if (s.head->p.y > LINES)
 						s.head->p.y = LINES - 1;
 
-					placeFood(COLS, LINES, s, &food, &portal);
+					place_food(COLS, LINES, s, &food, &portal);
 					redraw(s.head, food, portal, instructions_flag);
 					break;
 				default:
@@ -292,19 +292,19 @@ int main(int argc, char **argv) {
 
 		if (!paused && update) {
 			if (next_dir != NO_DIR && s.dir != next_dir) {
-				if (isDirOpposite(s.dir, next_dir)) {
-					reverseSnake(&s);
+				if (is_dir_opposite(s.dir, next_dir)) {
+					reverse_snake(&s);
 					rev = 1;
 				}
 
-				dfps_cur = speedUp(dfps_cur, dfps_max, acceleration);
+				dfps_cur = speed_up(dfps_cur, dfps_max, acceleration);
 				s.dir = next_dir;
 				next_dir = NO_DIR;
 			}
 
 			mvaddch(s.tail->p.y, s.tail->p.x, CH_VOID);
 
-			switch (moveSnake(COLS, LINES, &s, &food, &portal, length_max)) {
+			switch (move_snake(COLS, LINES, &s, &food, &portal, length_max)) {
 				case 1:
 					if (rev)
 						cause_of_death = DEATH_REVERSE;
@@ -323,14 +323,14 @@ int main(int argc, char **argv) {
 			}
 
 			if (s.dir != DEAD) {
-				do_color(COLOR_LEAD, 1);
+				do_color(COLOR_HEAD, 1);
 				mvaddch(s.head->p.y, s.head->p.x, CH_HEAD);
-				do_color(COLOR_LEAD, 0);
+				do_color(COLOR_HEAD, 0);
 
 				if (s.head->next) {
-						do_color(COLOR_BLOCK, 1);
+						do_color(COLOR_BODY, 1);
 						mvaddch(s.head->next->p.y, s.head->next->p.x, CH_BODY);
-						do_color(COLOR_BLOCK, 0);
+						do_color(COLOR_BODY, 0);
 				}
 			}
 		}

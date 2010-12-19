@@ -9,7 +9,7 @@ enum direction {
 	NORTH,
 	EAST,
 	SOUTH,
-	WEST
+	WEST,
 };
 
 struct snake {
@@ -19,11 +19,11 @@ struct snake {
 	enum direction dir;
 };
 
-int isDirOpposite(enum direction a, enum direction b);
-int collideWithSnake(struct block *head, struct posn p);
-int inSnakePath(struct snake s, struct posn p);
-unsigned int extendSnake(struct snake *s, unsigned int length, unsigned int length_max);
-void reverseSnake(struct snake *s);
-int isSnakeVertical(struct snake s);
+int is_dir_opposite(enum direction a, enum direction b);
+int collide_with_snake(struct block *head, struct posn p);
+int in_snake_path(struct snake s, struct posn p);
+unsigned int extend_snake(struct snake *s, unsigned int length, unsigned int length_max);
+void reverse_snake(struct snake *s);
+int is_snake_vertical(struct snake s);
 
 #endif /* __SNAKE_H */

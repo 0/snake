@@ -20,10 +20,10 @@
 #include "things.h"
 
 enum item_color {
-	COLOR_LEAD = 1,
-	COLOR_BLOCK,
+	COLOR_HEAD = 1,
+	COLOR_BODY,
 	COLOR_FOOD,
-	COLOR_PORTAL
+	COLOR_PORTAL,
 };
 
 void do_color(enum item_color c, int on);

@@ -4,7 +4,7 @@
 
 #include "things.h"
 
-struct block *fetchBlock() {
+struct block *fetch_block() {
 	struct block *ret = calloc(1, sizeof(struct block));
 
 	if (NULL == ret) {

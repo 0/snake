@@ -12,6 +12,6 @@ struct block {
 	struct block *prev;
 };
 
-struct block *fetchBlock();
+struct block *fetch_block();
 
 #endif /* __THINGS_H */
