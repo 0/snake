@@ -56,7 +56,7 @@ int main(int argc, char **argv) {
 
 	unsigned int dfps_init = DFPS_INIT;
 	unsigned int dfps_max = DFPS_MAX;
-	unsigned int acceleration = ACCEL_DEFAULT;
+	unsigned int accel = ACCEL_DEFAULT;
 
 	unsigned int length_init = 0;
 
@@ -79,6 +79,7 @@ int main(int argc, char **argv) {
 	};
 
 	int opterr_flag = 0;
+	int show_help = 0;
 	int c = 0;
 
 	char dfps_display_buf[DFPS_MAX_CHARS + 1];
@@ -106,58 +107,26 @@ int main(int argc, char **argv) {
 	srand(time(NULL));
 
 	while (c != -1) {
-		char *p;
-		long n;
 		c = getopt_long(argc, argv, "", longopts, NULL);
 
 		switch (c) {
 			case 'h':
-				show_usage(argv[0]);
-				return 0;
+				show_help = 1;
+				break;
 			case 'a':
-				n = strtol(optarg, &p, 10);
-				if (errno || *p || n < ACCEL_MIN || n > ACCEL_MAX) {
-					fprintf(stderr, "Invalid value for acceleration: %s\n", optarg);
-					opterr_flag = 1;
-				} else {
-					acceleration = n;
-				}
+				parse_uint_arg(&accel, "acceleration", optarg, ACCEL_MIN, ACCEL_MAX, &opterr_flag);
 				break;
 			case 'i':
-				n = strtol(optarg, &p, 10);
-				if (errno || *p || n < DFPS_MIN || n > DFPS_MAX) {
-					fprintf(stderr, "Invalid value for fps-init: %s\n", optarg);
-					opterr_flag = 1;
-				} else {
-					dfps_init = n;
-				}
+				parse_uint_arg(&dfps_init, "dfps-init", optarg, DFPS_MIN, DFPS_MAX, &opterr_flag);
 				break;
 			case 'm':
-				n = strtol(optarg, &p, 10);
-				if (errno || *p || n < DFPS_MIN || n > DFPS_MAX) {
-					fprintf(stderr, "Invalid value for fps-max: %s\n", optarg);
-					opterr_flag = 1;
-				} else {
-					dfps_max = n;
-				}
+				parse_uint_arg(&dfps_max, "dpfs-max", optarg, DFPS_MIN, DFPS_MAX, &opterr_flag);
 				break;
 			case 'j':
-				n = strtol(optarg, &p, 10);
-				if (errno || *p || n < 0 || n > LENGTH_MAX) {
-					fprintf(stderr, "Invalid value for length-init: %s\n", optarg);
-					opterr_flag = 1;
-				} else {
-					length_init = n;
-				}
+				parse_uint_arg(&length_init, "length-init", optarg, 0, LENGTH_MAX, &opterr_flag);
 				break;
 			case 'n':
-				n = strtol(optarg, &p, 10);
-				if (errno || *p || n < 0 || n > LENGTH_MAX) {
-					fprintf(stderr, "Invalid value for length-max: %s\n", optarg);
-					opterr_flag = 1;
-				} else {
-					length_max = n;
-				}
+				parse_uint_arg(&length_max, "length-max", optarg, 0, LENGTH_MAX, &opterr_flag);
 				break;
 			case '?':
 				opterr_flag = 1;
@@ -165,19 +134,27 @@ int main(int argc, char **argv) {
 		}
 	}
 
-	if (dfps_init > dfps_max) {
-		fprintf(stderr, "Initial framerate cannot be higher than the maximum.\n");
-		opterr_flag = 1;
+	if (!opterr_flag) {
+		if (dfps_init > dfps_max) {
+			fprintf(stderr, "Initial framerate cannot be higher than the maximum.\n");
+			opterr_flag = 1;
+		}
+
+		if (length_init > length_max) {
+			fprintf(stderr, "Initial length cannot be higher than the maximum.\n");
+			opterr_flag = 1;
+		}
 	}
 
-	if (length_init > length_max) {
-		fprintf(stderr, "Initial length cannot be higher than the maximum.\n");
-		opterr_flag = 1;
-	}
-
-	if (opterr_flag) {
+	if (show_help) {
+		show_usage(argv[0]);
+		if (opterr_flag)
+			return 2;
+		else
+			return 0;
+	} else if (opterr_flag) {
 		fprintf(stderr, "Use --help for usage information.\n");
-		return 1;
+		return 2;
 	}
 
 	signal(SIGINT, bail);
@@ -297,7 +274,7 @@ int main(int argc, char **argv) {
 					rev = 1;
 				}
 
-				dfps_cur = speed_up(dfps_cur, dfps_max, acceleration);
+				dfps_cur = speed_up(dfps_cur, dfps_max, accel);
 				s.dir = next_dir;
 				next_dir = NO_DIR;
 			}

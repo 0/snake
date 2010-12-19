@@ -1,4 +1,5 @@
 #include <curses.h>
+#include <errno.h>
 #include <stdlib.h>
 
 #include "game.h"
@@ -123,4 +124,21 @@ void show_usage(char *cmd) {
 "  Framerate: %d to %d (dfps)\n"
 "  Length: 0 to %d\n",
 		ACCEL_MIN, ACCEL_MAX, DFPS_MIN, DFPS_MAX, LENGTH_MAX);
+}
+
+int parse_uint_arg(unsigned int *target, char *arg_name, char *arg_value, int min_bound, int max_bound, int *opterr_flag) {
+	char *p;
+	long n;
+
+	errno = 0;
+	n = strtol(arg_value, &p, 10);
+
+	if (errno || *p || n < min_bound || n > max_bound) {
+		fprintf(stderr, "Invalid value for %s: %s\n", arg_name, arg_value);
+		*opterr_flag = 1;
+		return 0;
+	} else {
+		*target = n;
+		return 1;
+	}
 }

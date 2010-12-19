@@ -31,5 +31,6 @@ void print_instructions();
 void redraw(struct block *head, struct posn food, struct posn portal, int instructions_flag);
 const char *generate_header();
 void show_usage(char *cmd);
+int parse_uint_arg(unsigned int *target, char *arg_name, char *arg_value, int min_bound, int max_bound, int *opterr_flag);
 
 #endif /* __INTERFACE_H */
