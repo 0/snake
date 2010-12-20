@@ -5,8 +5,6 @@ game_sources = $(wildcard *.c)
 game_depends = $(game_sources:.c=.dep)
 game_objects = $(game_sources:.c=.o)
 
-all: snake
-
 snake: $(game_objects)
 
 %.dep: %.c
@@ -15,7 +13,9 @@ snake: $(game_objects)
 
 -include $(game_depends)
 
+.PHONY: all clean
+
+all: snake
+
 clean:
 	-rm -f snake $(game_objects) $(game_depends)
-
-.PHONY: all clean
